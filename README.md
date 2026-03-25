@@ -1,0 +1,2 @@
+# pos
+echo "hello";
