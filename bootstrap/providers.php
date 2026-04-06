@@ -1,7 +1,9 @@
 <?php
 
-use App\Providers\AppServiceProvider;
-
 return [
-    AppServiceProvider::class,
+    App\Providers\AppServiceProvider::class,
+    App\Providers\AuthServiceProvider::class,
+    Spatie\Permission\PermissionServiceProvider::class,
+    Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
+
 ];
