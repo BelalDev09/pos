@@ -21,14 +21,14 @@ class CategoryController extends Controller
     protected $category;
     public function __construct(Category $category)
     {
-        $this->middleware(['auth', 'role_or_permission:admin|superadmin']);
+        $this->middleware(['auth', 'role_or_permission:admin|super_admin']);
         $this->category = $category;
     }
 
     public function index(Request $request)
     {
         // Authorize: Only admin can view categories
-        if (!Auth::user()->hasAnyRole(['cashier', 'admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['cashier', 'admin', 'super_admin'])) {
             abort(403, 'You do not have permission to view approval requests');
         } {
             if ($request->ajax()) {
@@ -80,7 +80,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to create category');
         }
         $categories = Category::where('status', 'active')->get();
@@ -93,7 +93,7 @@ class CategoryController extends Controller
      */
     public function store(CategoryRequest $request)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to store category');
         }
         try {
@@ -135,7 +135,7 @@ class CategoryController extends Controller
      */
     public function edit(string $id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to edit category');
         }
         $data = $this->category->findOrFail($id);
@@ -148,7 +148,7 @@ class CategoryController extends Controller
      */
     public function update(CategoryRequest $request, string $id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to update category');
         }
         $category = $this->category->find($id);
@@ -186,7 +186,7 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to delete category');
         }
         try {
@@ -214,7 +214,7 @@ class CategoryController extends Controller
 
     public function changeStatus($id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to change status category');
         }
         $data = $this->category->find($id);
@@ -255,7 +255,7 @@ class CategoryController extends Controller
 
     public function bulkDelete(Request $request)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to bulk categories data');
         }
         $ids = $request->ids;

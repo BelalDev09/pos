@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Web\backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\AgentSubscription;
+use App\Models\Category;
+use App\Models\Customer;
 use App\Models\MembershipPlan;
 use App\Models\PaymentLog;
+use App\Models\Product;
 use App\Models\User;
 use App\Traits\AuthorizesRequest;
 use Illuminate\Http\Request;
@@ -16,8 +19,8 @@ class DashboardController extends Controller
 {
     public function __construct()
     {
-        // Middleware: manager, admin, superadmin can access
-        $this->middleware(['auth', 'role_or_permission:admin|superadmin']);
+        // Middleware: manager, admin, super_admin can access
+        $this->middleware(['auth', 'role_or_permission:admin|super_admin']);
     }
 
     /**
@@ -27,8 +30,8 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Authorize: Only admin/superadmin can access
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        // Authorize: Only admin/super_admin can access
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to view dashboard access');
         }
 
@@ -36,26 +39,56 @@ class DashboardController extends Controller
         $greeting = $this->getGreeting();
 
         // Core Statistics
-        $stats = [
-            'total_agents' => User::where('role', 'agent')->count(),
-            'active_agents' => User::where('role', 'agent')->where('status', 'active')->count(),
-            'pending_agents' => User::where('role', 'agent')->where('status', 'pending')->count(),
-            'suspended_agents' => User::where('role', 'agent')->where('status', 'suspended')->count(),
-            'onboarding_complete' => User::where('role', 'agent')->where('onboard_complete', true)->count(),
-        ];
+        // $stats = [
+        //     'total_agents' => User::where('role', 'agent')->count(),
+        //     'active_agents' => User::where('role', 'agent')->where('status', 'active')->count(),
+        //     'pending_agents' => User::where('role', 'agent')->where('status', 'pending')->count(),
+        //     'suspended_agents' => User::where('role', 'agent')->where('status', 'suspended')->count(),
+        //     'onboarding_complete' => User::where('role', 'agent')->where('onboard_complete', true)->count(),
+        // ];
 
-        // Recent Agents (last 5)
-        $recent_agents = User::where('role', 'agent')
-            ->with('membershipPlan')
-            ->latest('created_at')
-            ->limit(5)
-            ->get();
 
+
+
+        /**
+         * @var mixed
+         * pso dashboard
+         */
+        $categories = Category::all();
+        $user = Auth::user();
+
+        // ── Stats 
+        if ($user && $user->tenant_id) {
+            $stats = [
+                'products'   => Product::where('tenant_id', $user->tenant_id)->count(),
+                'categories' => Category::where('tenant_id', $user->tenant_id)->count(),
+                'customers'  => Customer::where('tenant_id', $user->tenant_id)->count(),
+            ];
+
+            $recentProducts = Product::where('tenant_id', $user->tenant_id)
+                ->latest()
+                ->take(5)
+                ->get(['id', 'name', 'created_at']);
+        } else {
+            // Super admin or no tenant — bypass scope
+            $stats = [
+                'products'   => Product::withoutGlobalScopes()->count(),
+                'categories' => Category::withoutGlobalScopes()->count(),
+                'customers'  => Customer::withoutGlobalScopes()->count(),
+            ];
+
+            $recentProducts = Product::withoutGlobalScopes()
+                ->latest()
+                ->take(5)
+                ->get(['id', 'name', 'created_at']);
+        }
 
 
         return view('backend.dashboard', compact(
             'greeting',
             'stats',
+            'categories',
+            'recentProducts'
             // 'recent_agents',
             // 'recent_payments',
             // 'top_plans',
@@ -68,7 +101,7 @@ class DashboardController extends Controller
      */
     private function getGreeting()
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to view dashboard');
         }
         $hour = now()->hour;

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+
 class AuthServiceProvider extends ServiceProvider
 {
     /**
@@ -20,7 +21,7 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, $ability) {
-            if ($user->hasRole('superadmin') || $user->hasRole('admin')) {
+            if ($user->hasRole('super_admin') || $user->hasRole('admin')) {
                 return true;
             }
         });

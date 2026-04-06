@@ -1,278 +1,221 @@
-@extends('backend.app')
+{{-- File: resources/views/pos/index.blade.php --}}
 
-@section('title', 'Admin Dashboard')
+@extends('layouts.pos') {{-- Updated layout --}}
 
-{{-- @push('style')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        .stat-card {
-            border-left: 5px solid #007bff;
-            transition: transform 0.2s;
-        }
+@section('content')
+<div class="flex h-screen w-full" x-data="posApp()" x-init="init()">
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
+    {{-- ── LEFT PANEL: Product Grid  --}}
+    <div class="flex flex-col w-3/5 bg-white border-r border-gray-200">
 
-        .stat-card.success {
-            border-left-color: #28a745;
-        }
-
-        .stat-card.warning {
-            border-left-color: #ffc107;
-        }
-
-        .stat-card.danger {
-            border-left-color: #dc3545;
-        }
-
-        .greeting-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .progress {
-            height: 25px;
-            font-weight: bold;
-        }
-    </style>
-@endpush --}}
-
-{{-- @section('content')
-    <div class="app-content content">
-        <div class="content-wrapper">
-            <!-- Greeting Section -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card greeting-card shadow-sm">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-1">{{ $greeting['message'] }}, {{ auth()->user()->name }}!</h3>
-                                <p class="mb-0">Here's what's happening with your platform today</p>
-                            </div>
-                            <div>
-                                <i class="fa-solid {{ $greeting['icon'] }} fa-4x {{ $greeting['color'] }}"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Statistics Cards -->
-            {{-- <div class="row">
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card stat-card shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title text-muted">Total Agents</h5>
-                            <h2 class="font-weight-bold">{{ number_format($stats['total_agents']) }}</h2>
-                            <p class="mb-0">
-                                <span class="text-success"><i class="fa-solid fa-arrow-up"></i>
-                                    {{ $stats['active_agents'] }} Active</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card stat-card success shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title text-muted">Active Subscriptions</h5>
-                            <h2 class="font-weight-bold">{{ number_format($stats['active_subscriptions']) }}</h2>
-                            <p class="mb-0">
-                                {{ $stats['active_subscriptions'] > 0 ? round(($stats['active_subscriptions'] / $stats['total_agents']) * 100, 1) : 0 }}%
-                                of total agents
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card stat-card warning shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title text-muted">Monthly Revenue</h5>
-                            <h2 class="font-weight-bold">${{ number_format($stats['monthly_revenue'], 2) }}</h2>
-                            <p class="mb-0">
-                                Total: ${{ number_format($stats['total_revenue'], 2) }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card stat-card danger shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title text-muted">Pending Agents</h5>
-                            <h2 class="font-weight-bold">{{ number_format($stats['pending_agents']) }}</h2>
-                            <p class="mb-0">Awaiting onboarding completion</p>
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
-
-            <!-- Main Content -->
-            {{-- <div class="row mt-4"> --}}
-                <!-- Recent Agents -->
-                {{-- <div class="col-lg-6 col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Recent Agents</h5>
-                            <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Plan</th>
-                                            <th>Status</th>
-                                            <th>Joined</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody> --}}
-                                        {{-- @forelse($recent_agents as $agent) --}}
-                                        {{-- <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <img src="{{ $agent->avatar ?? asset('https://static.vecteezy.com/system/resources/previews/048/926/084/non_2x/silver-membership-icon-default-avatar-profile-icon-membership-icon-social-media-user-image-illustration-vector.jpg') }}"
-                                                        alt="Avatar" class="rounded-circle mr-2" width="40"
-                                                        height="40"> --}}
-                                                    {{-- <strong>{{ $agent->name }}</strong> --}}
-                                                {{-- </div>
-                                            </td> --}}
-                                            {{-- <td>{{ $agent->email }}</td>
-                                            <td>{{ $agent->membershipPlan?->name ?? 'N/A' }}</td> --}}
-                                            {{-- <td>
-                                                <span
-                                                    class="badge bg-{{ $agent->status == 'active' ? 'success' : ($agent->status == 'pending' ? 'warning' : 'danger') }}">
-                                                    {{ ucfirst($agent->status) }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $agent->created_at->diffForHumans() }}</td>
-                                        </tr>
-                                        {{-- @empty --}}
-                                        {{-- <tr>
-                                            <td colspan="5" class="text-center py-4">No recent agents</td>
-                                        </tr> --}}
-                                        {{-- @endforelse --}}
-                                    {{-- </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
-
-                <!-- Recent Payments -->
-                {{-- <div class="col-lg-6 col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Recent Payments</h5>
-                            <span class="badge bg-success">{{ $recent_payments->count() }} Recent</span>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Agent</th>
-                                            <th>Amount</th>
-                                            <th>Type</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($recent_payments as $payment)
-                                            <tr>
-                                                <td>{{ $payment->user?->name ?? 'Unknown' }}</td>
-                                                <td class="text-success font-weight-bold">
-                                                    ${{ number_format($payment->amount, 2) }}</td>
-                                                <td>
-                                                    <span class="badge bg-info">{{ ucfirst($payment->payment_type) }}</span>
-                                                </td>
-                                                <td>{{ $payment->paid_at?->diffForHumans() ?? 'N/A' }}</td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="text-center py-4">No recent payments</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
-
-                <!-- Top Plans & Quick Actions -->
-                {{-- <div class="row mt-4">
-                    <div class="col-lg-6 col-12">
-                        <div class="card shadow-sm">
-                            <div class="card-header">
-                                <h5 class="mb-0">Top Membership Plans</h5>
-                            </div> --}}
-                            {{-- <div class="card-body">
-                            @forelse($top_plans as $plan)
-                                <div class="mb-4">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <strong>{{ $plan->name }}</strong>
-                                        <span class="badge bg-primary">{{ $plan->agent_subscriptions_count }} Agents</span>
-                                    </div>
-                                    <div class="progress" style="height: 20px;">
-                                        @php
-                                            $max = $top_plans->max('agent_subscriptions_count');
-                                            $percentage =
-                                                $max > 0 ? ($plan->agent_subscriptions_count / $max) * 100 : 0;
-                                        @endphp
-                                        <div class="progress-bar bg-success" style="width: {{ $percentage }}%">
-                                            ${{ number_format($plan->base_price, 2) }}
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <p class="text-muted text-center">No active plans available</p>
-                            @endforelse
-                        </div> --}}
-                        {{-- </div>
-                    </div>
-
-
-                </div>
+        {{-- Search / Barcode Bar --}}
+        <div class="p-3 bg-gray-50 border-b border-gray-200">
+            <div class="relative">
+                <input type="text"
+                    id="barcode-input"
+                    x-model="searchQuery"
+                    @input.debounce.300ms="searchProducts()"
+                    @keydown.enter.prevent="handleEnterKey()"
+                    placeholder="🔍 Scan barcode or search product (F2)"
+                    class="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    autocomplete="off">
+                <button @click="toggleCameraScanner()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600">
+                    📷
+                </button>
             </div>
         </div>
-    @endsection  --}}
 
-    {{-- @push('script') --}}
-        <!-- Chart.js if you want revenue chart -->
-        {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --}}
-        <script>
-            // Optional: Revenue Chart
+        {{-- Category Pills --}}
+        <div class="flex gap-2 px-3 py-2 overflow-x-auto border-b border-gray-100">
+            <button @click="selectedCategory = null; loadProducts()"
+                :class="selectedCategory === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'"
+                class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors">
+                All
+            </button>
+            @foreach($categories as $category)
+            <button @click="selectedCategory = {{ $category->id }}; loadProducts()"
+                :class="selectedCategory === {{ $category->id }} ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'"
+                class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors">
+                {{ $category->name }}
+            </button>
+            @endforeach
+        </div>
 
-            // const labels = revenueData.map(item => item.date);
-            // const amounts = revenueData.map(item => item.amount);
+        {{-- Product Grid --}}
+        <div class="flex-1 overflow-y-auto p-3">
+            <div class="grid grid-cols-3 xl:grid-cols-4 gap-3" id="product-grid">
 
-            // new Chart(document.getElementById('revenueChart'), {
-            //     type: 'line',
-            //     data: {
-            //         labels: labels,
-            //         datasets: [{
-            //             label: 'Revenue ($)',
-            //             data: amounts,
-            //             borderColor: '#28a745',
-            //             backgroundColor: 'rgba(40, 167, 69, 0.1)',
-            //             tension: 0.4,
-            //             fill: true
-            //         }]
-            //     },
-            // options: {
-            // responsive: true,
-            // scales: {
-            //     y: {
-            //         beginAtZero: true
-            //     }
-            // }
-            // }
-            // });
-        </script>
-    {{-- @endpush --}}
+                {{-- Loading state --}}
+                <template x-if="loadingProducts">
+                    <div class="col-span-full flex justify-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                </template>
+
+                {{-- Products --}}
+                <template x-for="product in products" :key="product.id">
+                    <div @click="addToCart(product.default_variant_id ?? product.id)"
+                        class="bg-white border border-gray-200 rounded-xl p-3 cursor-pointer
+                                hover:border-blue-400 hover:shadow-md transition-all select-none"
+                        :class="{'opacity-50 cursor-not-allowed': product.stock_qty <= 0 && product.track_stock}">
+
+                        {{-- Product Image --}}
+                        <div class="aspect-square rounded-lg bg-gray-100 mb-2 overflow-hidden flex items-center justify-center">
+                            <img x-show="product.image"
+                                :src="'/storage/' + product.image"
+                                :alt="product.name"
+                                class="w-full h-full object-cover">
+                            <span x-show="!product.image" class="text-3xl">📦</span>
+                        </div>
+
+                        {{-- Product Info --}}
+                        <p class="text-xs text-gray-500 truncate" x-text="product.category?.name"></p>
+                        <p class="text-sm font-semibold text-gray-800 truncate leading-tight" x-text="product.name"></p>
+
+                        {{-- Price & Stock --}}
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-blue-700 font-bold text-sm" x-text="formatMoney(product.selling_price)"></span>
+                            <span class="text-xs px-1.5 py-0.5 rounded"
+                                :class="{
+                                      'bg-green-100 text-green-700': product.stock_qty > 5,
+                                      'bg-yellow-100 text-yellow-700': product.stock_qty > 0 && product.stock_qty <= 5,
+                                      'bg-red-100 text-red-700': product.stock_qty <= 0
+                                  }"
+                                x-text="product.track_stock ? product.stock_qty + ' left' : '∞'">
+                            </span>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Empty state --}}
+                <template x-if="!loadingProducts && products.length === 0">
+                    <div class="col-span-full text-center py-12 text-gray-400">
+                        <p class="text-4xl mb-2">🔍</p>
+                        <p class="text-sm">No products found</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── RIGHT PANEL: Cart --}}
+    <div class="flex flex-col w-2/5 bg-gray-50">
+
+        {{-- Cart Header --}}
+        <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+            <div>
+                <h2 class="font-semibold text-gray-800">Current Sale</h2>
+                <p class="text-xs text-gray-500" x-text="cart.item_count + ' items'"></p>
+            </div>
+            <div class="flex gap-2">
+                {{-- Customer selector --}}
+                <button @click="openCustomerModal()"
+                    class="text-sm px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1">
+                    <span x-text="selectedCustomer ? selectedCustomer.name : 'Walk-in'"></span>
+                    <span class="text-gray-400">▾</span>
+                </button>
+                <button @click="clearCart()"
+                    class="text-sm px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
+                    x-show="cart.item_count > 0">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        {{-- Cart Items --}}
+        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-2">
+
+            <template x-if="cart.item_count === 0">
+                <div class="flex flex-col items-center justify-center h-40 text-gray-400">
+                    <span class="text-5xl mb-2">🛒</span>
+                    <p class="text-sm">Cart is empty</p>
+                    <p class="text-xs">Scan or click a product to add</p>
+                </div>
+            </template>
+
+            <template x-for="item in cart.items" :key="item.variant_id">
+                @include('components.pos.cart-item')
+            </template>
+        </div>
+
+        {{-- Coupon input --}}
+        <div class="px-3 pb-2" x-show="cart.item_count > 0">
+            <div class="flex gap-2" x-show="!cart.coupon">
+                <input type="text"
+                    x-model="couponCode"
+                    @keydown.enter="applyCoupon()"
+                    placeholder="Coupon code..."
+                    class="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg">
+                <button @click="applyCoupon()"
+                    class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                    Apply
+                </button>
+            </div>
+            <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2"
+                x-show="cart.coupon">
+                <span class="text-green-700 text-sm font-medium" x-text="'Coupon: ' + cart.coupon?.code"></span>
+                <button @click="removeCoupon()" class="text-red-400 hover:text-red-600 text-xs">Remove</button>
+            </div>
+        </div>
+
+        {{-- Order Totals --}}
+        <div class="bg-white border-t border-gray-200 px-4 py-3 space-y-1.5">
+            <div class="flex justify-between text-sm text-gray-600">
+                <span>Subtotal</span>
+                <span x-text="formatMoney(cart.subtotal)"></span>
+            </div>
+            <div class="flex justify-between text-sm text-red-500" x-show="cart.discount_total > 0">
+                <span>Discount</span>
+                <span x-text="'- ' + formatMoney(cart.discount_total)"></span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600">
+                <span>Tax</span>
+                <span x-text="formatMoney(cart.tax_total)"></span>
+            </div>
+            <div class="flex justify-between text-lg font-bold text-gray-900 border-t pt-2 mt-2">
+                <span>TOTAL</span>
+                <span x-text="formatMoney(cart.grand_total)" class="text-blue-700"></span>
+            </div>
+        </div>
+
+        {{-- Payment Buttons --}}
+        <div class="p-3 grid grid-cols-3 gap-2 bg-white border-t">
+            <button @click="openPayment('cash')"
+                :disabled="cart.item_count === 0"
+                class="py-4 bg-green-600 text-white rounded-xl font-semibold
+                           hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed
+                           flex flex-col items-center gap-1">
+                <span class="text-xl">💵</span>
+                <span class="text-xs">Cash</span>
+            </button>
+            <button @click="openPayment('card')"
+                :disabled="cart.item_count === 0"
+                class="py-4 bg-blue-600 text-white rounded-xl font-semibold
+                           hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed
+                           flex flex-col items-center gap-1">
+                <span class="text-xl">💳</span>
+                <span class="text-xs">Card</span>
+            </button>
+            <button @click="openPayment('split')"
+                :disabled="cart.item_count === 0"
+                class="py-4 bg-purple-600 text-white rounded-xl font-semibold
+                           hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed
+                           flex flex-col items-center gap-1">
+                <span class="text-xl">⚡</span>
+                <span class="text-xs">Split</span>
+            </button>
+        </div>
+    </div>
+
+    {{-- ── Modals  --}}
+    @include('components.pos.payment-modal')
+    @include('components.pos.numpad')
+</div>
+
+@push('scripts')
+<script>
+    import('/resources/js/pos/cart.js');
+</script>
+@endpush
+@endsection

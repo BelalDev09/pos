@@ -24,7 +24,7 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
 
         return match (true) {
-            $user->hasAnyRole(['superadmin', 'admin']) => redirect()->route('dashboard'),
+            $user->hasAnyRole(['super_admin', 'admin']) => redirect()->route('dashboard'),
 
             // $user->hasRole('manager') => redirect()->route('manager.dashboard'),
 

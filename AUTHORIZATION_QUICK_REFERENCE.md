@@ -27,7 +27,7 @@ public function index(Request $request) {
 ```php
 $this->authorizeAdmin('Custom error message');
 ```
-Checks: User has 'admin' OR 'superadmin' role
+Checks: User has 'admin' OR 'super_admin' role
 
 ### For Manager Only
 ```php

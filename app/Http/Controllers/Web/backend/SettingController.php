@@ -21,7 +21,7 @@ class SettingController extends Service
     public  function  __construct()
     {
         $this->settingServiceObj = new SettingService();
-        // $this->middleware(['auth', 'role_or_permission:admin|superadmin']);
+        // $this->middleware(['auth', 'role_or_permission:admin|super_admin']);
     }
 
     public function adminSetting()
@@ -32,7 +32,7 @@ class SettingController extends Service
     public function adminSettingUpdate(Request $request)
     {
         // Authorize: Only admin can update admin settings
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to update admin settings');
         }
 
@@ -83,7 +83,7 @@ class SettingController extends Service
 
     public function systemSetting()
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to view admin settings');
         }
 
@@ -95,7 +95,7 @@ class SettingController extends Service
     public function systemSettingUpdate(Request $request)
     {
         // Authorize: Only admin can update system settings
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to update admin settings');
         }
         $validator = Validator::make($request->all(), [
@@ -153,7 +153,7 @@ class SettingController extends Service
 
     public function mail()
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to view mail');
         }
         return view('backend.layout.setting.mail');
@@ -162,7 +162,7 @@ class SettingController extends Service
     public function mailstore(Request $request)
     {
         // Authorize: Only admin can configure mail settings
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to mail store');
         }
 

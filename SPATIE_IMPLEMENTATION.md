@@ -7,7 +7,7 @@ This document outlines the comprehensive application of Spatie Role & Permission
 
 ### 1. **routes/backend.php**
 **Purpose**: Admin panel routes
-**Middleware Applied**: `['auth', 'verified', 'role_or_permission:admin|superadmin']` (Global)
+**Middleware Applied**: `['auth', 'verified', 'role_or_permission:admin|super_admin']` (Global)
 
 **Protected Routes**:
 - Dashboard (`/admin/dashboard`)
@@ -43,7 +43,7 @@ This document outlines the comprehensive application of Spatie Role & Permission
 - Operations: Orders, Payments, Discounts, Tips, Refunds
 
 **Admin Dashboard** (`/dashboard`)
-- Middleware: `['auth', 'verified', 'role_or_permission:admin|superadmin']`
+- Middleware: `['auth', 'verified', 'role_or_permission:admin|super_admin']`
 
 **Public Routes** (No authentication required):
 - Home page: `/`
@@ -98,7 +98,7 @@ $middleware->alias([
 | Role | Permissions | Access Level |
 |------|-----------|--------------|
 | `admin` | All admin operations | Full backend access |
-| `superadmin` | All operations | Full system access |
+| `super_admin` | All operations | Full system access |
 | `manager` | Approvals, Reports, Staff, Kitchen, Cash | Manager dashboard |
 | `cashier` | Orders, Payments, Discounts, Tips, Refunds | Cashier dashboard |
 | `customer` | Browse menu, place orders | Customer portal |
@@ -120,7 +120,7 @@ $middleware->alias([
 ## Login Redirects
 
 The application automatically redirects users to relevant dashboards after login based on their role:
-- **Admin/Superadmin** → `/admin/dashboard`
+- **Admin/super_admin** → `/admin/dashboard`
 - **Manager** → `/manager-dashboard`
 - **Cashier** → `/cashier/dashboard`
 
@@ -153,7 +153,7 @@ if (Gate::denies('edit-post', $post)) {
 GET /admin/dashboard
 Headers: 
   - Cookie: XSRF-TOKEN=..., laravel_session=...
-  - User: Must have 'admin' or 'superadmin' role
+  - User: Must have 'admin' or 'super_admin' role
 ```
 
 ### Accessing API Routes

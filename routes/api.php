@@ -1,130 +1,77 @@
 <?php
 
-use App\Http\Controllers\API\App\v1\AppOrderController;
-use App\Http\Controllers\API\App\v1\CartController;
-use App\Http\Controllers\API\App\v1\MenuController;
-use App\Http\Controllers\API\App\v1\SeatController;
-use App\Http\Controllers\API\App\v1\TableController;
-use App\Http\Controllers\API\App\V1\BillController;
-use App\Http\Controllers\API\App\V1\NotificationController;
-use App\Http\Controllers\API\Cashier\CashierController;
-use App\Http\Controllers\API\Cashier\CashierDiscountController;
-use App\Http\Controllers\API\Cashier\CashierPaymentController;
-use App\Http\Controllers\API\Customer\CustomerController;
-use App\Http\Controllers\API\Customer\CustomerOrderController;
-use App\Http\Controllers\API\Manager\ManagerController;
-use App\Http\Controllers\API\SocialiteController;
-use App\Http\Controllers\API\user\AccountController;
-use App\Http\Controllers\API\user\ProfileController;
-use App\Http\Controllers\API\UserAuthController;
-use App\Http\Controllers\API\UserController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Products\ProductController;
+use App\Http\Controllers\Api\V1\Orders\CartController;
+use App\Http\Controllers\Api\V1\Orders\OrderController;
+use App\Http\Controllers\Api\V1\Inventory\InventoryController;
+use App\Http\Controllers\Api\V1\Reports\ReportController;
 use Illuminate\Support\Facades\Route;
 
+Route::prefix('v1')->group(function () {
 
-Route::controller(UserAuthController::class)->prefix('user')->group(function () {
-    Route::post('login', 'login');
-    Route::post('register', 'register');
-
-    // Resend Otp
-    Route::post('resend-otp', 'resendOtp');
-
-    // Forget Password
-    Route::post('forget-password', 'forgetPassword');
-    Route::post('verify-otp-password', 'varifyOtpWithOutAuth');
-    Route::post('reset-password', 'resetPassword');
-    // Social login
-    Route::post('/social/login', 'socialLogin');
-});
-Route::any('/callback', [SocialiteController::class, 'callback'])->name('socialite.callback');
-
-
-Route::group(['prefix' => 'user', 'middleware' => 'jwt.verify'], function () {
-    Route::get('me', [UserAuthController::class, 'me']);
-    Route::post('logout', [UserAuthController::class, 'logout']);
-
-    // Account routes
-    Route::controller(AccountController::class)->prefix('account')->group(function () {
-        Route::get('/', 'index');
-        Route::post('/update', 'update');
-        Route::post('/change-password', 'changePassword');
-        Route::post('/delete', 'destroy');
+    // ── Public Auth Endpoints 
+    Route::prefix('auth')->name('api.auth.')->group(function () {
+        Route::post('/login', [AuthController::class, 'login'])->name('login');
+        Route::post('/logout', [AuthController::class, 'logout'])
+            ->middleware('auth:sanctum')
+            ->name('logout');
+        Route::get('/me', [AuthController::class, 'me'])
+            ->middleware('auth:sanctum')
+            ->name('me');
     });
 
-    /**
-     * Cashier route
-     */
+    // ── Authenticated API Routes 
+    Route::middleware([
+        'auth:sanctum',
+        \App\Http\Middleware\IdentifyTenant::class,
+        \App\Http\Middleware\ScopeTenant::class,
+        'throttle:api',
+    ])->group(function () {
 
-    Route::prefix('cashier')->group(function () {
+        // Products
+        Route::prefix('products')->name('api.products.')->group(function () {
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::post('/', [ProductController::class, 'store'])->name('store');
+            Route::get('/search', [ProductController::class, 'search'])->name('search');
+            Route::get('/barcode/{barcode}', [ProductController::class, 'findByBarcode'])->name('barcode');
+            Route::get('/{id}', [ProductController::class, 'show'])->name('show');
+            Route::put('/{id}', [ProductController::class, 'update'])->name('update');
+            Route::delete('/{id}', [ProductController::class, 'destroy'])->name('destroy');
+        });
+
+        // POS Cart (high-frequency — dedicated rate limit)
+        Route::prefix('pos')->name('api.pos.')->middleware('throttle:pos-cart')->group(function () {
+            Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
+            Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.add');
+            Route::patch('/cart/items/{variantId}', [CartController::class, 'updateItem'])->name('cart.update');
+            Route::delete('/cart/items/{variantId}', [CartController::class, 'removeItem'])->name('cart.remove');
+            Route::post('/cart/coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon');
+            Route::delete('/cart', [CartController::class, 'clearCart'])->name('cart.clear');
+            Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');
+        });
 
         // Orders
-        Route::get('orders',                        [CashierController::class, 'getOrders']);
-        Route::get('orders/{order_id}',             [CashierController::class, 'getOrderDetail']);
+        Route::prefix('orders')->name('api.orders.')->group(function () {
+            Route::get('/', [OrderController::class, 'index'])->name('index');
+            Route::get('/{id}', [OrderController::class, 'show'])->name('show');
+            Route::post('/{id}/refund', [OrderController::class, 'refund'])->name('refund');
+            Route::post('/{id}/void', [OrderController::class, 'void'])->name('void');
+            Route::post('/offline-sync', [OrderController::class, 'syncOffline'])->name('offline-sync');
+        });
 
-        // Payment —
-        Route::post('payments/process',             [CashierPaymentController::class, 'processPayment']);
+        // Inventory
+        Route::prefix('inventory')->name('api.inventory.')->group(function () {
+            Route::get('/', [InventoryController::class, 'index'])->name('index');
+            Route::post('/adjust', [InventoryController::class, 'adjust'])->name('adjust');
+            Route::post('/transfer', [InventoryController::class, 'transfer'])->name('transfer');
+        });
 
-        // Discount
-        Route::post('orders/{order_id}/discount',   [CashierDiscountController::class, 'applyDiscount']);
-        Route::delete('orders/{order_id}/discount', [CashierDiscountController::class, 'removeDiscount']);
-
-        // Tips
-        Route::post('orders/{order_id}/tip',        [CashierController::class, 'addTip']);
-        Route::delete('orders/{order_id}/tip',      [CashierController::class, 'removeTip']);
-
-        // Refund
-        Route::post('refunds/full',                 [CashierController::class, 'fullRefund']);
-
-        // Report
-        Route::get('reports/daily',                 [CashierController::class, 'dailySalesReport']);
+        // Reports
+        Route::prefix('reports')->name('api.reports.')->group(function () {
+            Route::get('/dashboard', [ReportController::class, 'dashboard'])->name('dashboard');
+            Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+            Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
+        });
     });
-
-    // Manager deshboard api
-
-    Route::prefix('manager')->group(function () {
-
-        //  Dashboard
-        Route::get('dashboard',                         [ManagerController::class, 'dashboard']);
-
-        //  Approval Queue
-        Route::get('approvals',                         [ManagerController::class, 'getApprovals']);
-        Route::post('approvals/{id}/approve',           [ManagerController::class, 'approveRequest']);
-        Route::post('approvals/{id}/reject',            [ManagerController::class, 'rejectRequest']);
-
-        //  Discount / Promotion Control
-        Route::get('promotions',                        [ManagerController::class, 'getPromotions']);
-        Route::post('promotions',                       [ManagerController::class, 'createPromotion']);
-        Route::patch('promotions/{id}/toggle',          [ManagerController::class, 'togglePromotion']);
-        Route::delete('promotions/{id}',                [ManagerController::class, 'deletePromotion']);
-
-        //  Cash Management
-        Route::get('cash',                              [ManagerController::class, 'cashManagement']);
-
-        //  Staff Shift Control
-        Route::get('shifts',                            [ManagerController::class, 'getShifts']);
-        Route::post('shifts/{shift_id}/close',          [ManagerController::class, 'forceCloseShift']);
-
-        //  Live Kitchen Monitor
-        Route::get('kitchen',                           [ManagerController::class, 'kitchenMonitor']);
-
-        //  Reports
-        Route::get('reports/sales',                     [ManagerController::class, 'salesReport']);
-        Route::get('reports/category',                  [ManagerController::class, 'categoryReport']);
-        Route::get('reports/staff',                     [ManagerController::class, 'staffReport']);
-    });
-});
-// Profile
-Route::controller(ProfileController::class)->prefix('profile')->group(function () {
-    Route::get('/', 'index');
-    Route::post('/update', 'update');
-});
-// customers routes
-Route::prefix('customer')->group(function () {
-    Route::get('qr/{token}',          [CustomerController::class, 'scanQr']);
-    Route::get('menu/categories',     [CustomerController::class, 'getCategories']);
-    Route::get('menu/items',          [CustomerController::class, 'getMenuItems']);
-    Route::get('menu/items/{id}',     [CustomerController::class, 'getItemDetail']);
-    Route::post('orders',             [CustomerOrderController::class, 'placeOrder']);
-    Route::get('orders/{id}',         [CustomerController::class, 'getOrder']);
-    Route::get('orders/{id}/track',   [CustomerController::class, 'trackOrder']);
 });

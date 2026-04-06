@@ -2,64 +2,65 @@
 
 namespace App\Models;
 
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
+        'tenant_id',
+        'parent_id',
         'name',
         'slug',
-        // 'description',
-        // 'image',
-        'status',
-        'icon',
+        'image',
+        'description',
+        'color',
         'sort_order',
-        // 'parent_id'
-
-    ];
-    protected $hidden = [
-        'id',
-        'updated_at',
-        'status',
+        'is_active',
     ];
 
-    // protected $appends = [
-    //     'image_url',
-    //     'parent_id'
-    // ];
+    protected $casts = [
+        'is_active'  => 'boolean',
+        'sort_order' => 'integer',
+    ];
 
-    public function getImageUrlAttribute()
-    {
-        return asset($this->image);
-    }
+    // ── Relationships 
 
-    public function restaurant()
-    {
-        return $this->belongsTo(Restaurant::class);
-    }
-
-    public function items()
-    {
-        return $this->hasMany(MenuItem::class);
-    }
-    // parent category
-    public function parent()
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    // child categories
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
-    public function menuItems()
+
+    public function products(): HasMany
     {
-        return $this->hasMany(MenuItem::class, 'id');
+        return $this->hasMany(Product::class);
+    }
+
+    // ── Scopes 
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeRoot($query)
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order')->orderBy('name');
     }
 }

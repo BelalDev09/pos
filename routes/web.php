@@ -10,9 +10,9 @@ use App\Http\Controllers\ProfileController;
 
 Route::get('/', fn() => view('welcome'));
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-});
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// });
 
 /**
  * Dashboard

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -11,7 +12,12 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory,
+        Notifiable,
+        // HasApiTokens,
+        HasRoles,
+        SoftDeletes;
+
 
     protected $fillable = [
         'avatar',
@@ -26,43 +32,17 @@ class User extends Authenticatable implements JWTSubject
         'reset_token',
         'role',
         'status',
-        'license_number',
-        'license_type',
-        'license_status',
-        'current_brokerage',
-        'mls_membership_option',
-        'gamls_access',
-        'nar_number',
-        'electronic_signature',
-        'board_association',
-        'ica_signed',
-        'policies_accepted',
-        'w9_completed',
-        'photo_id_uploaded',
-        'tax',
-        'ssn_ein',
-        'city',
-        'zip_code',
-        'document',
-        'privacy_policy',
-        'is_admin',
-        'stripe_account_id',
-        'stripe_customer_id',
-        'stripe_subscription_id',
-        'payment_method',
-        'onboarding_started_at',
-        'onboarding_completed_at',
-        'current_onboarding_step',
-        'onboard_complete',
-        'payment_method_id',
-        'is_card',
-        'is_bank',
-        'auto_purchase',
-        'docusign_access_token',
-        'docusign_refresh_token',
-        'docusign_token_expires_at',
-        'docusign_account_id',
-        'docusign_base_uri',
+        'tenant_id',
+        'store_id',
+        'name',
+        'email',
+        'password',
+        'avatar',
+        'pin',
+        'is_active',
+        'is_super_admin',
+        'locale',
+        'timezone',
         'provider',
         'provider_id',
         'provider_refresh_token',
@@ -71,6 +51,7 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'pin',
     ];
 
     protected function casts(): array
@@ -80,19 +61,9 @@ class User extends Authenticatable implements JWTSubject
             'otp_created_at' => 'datetime',
             'otp_expires_at' => 'datetime',
             'password' => 'hashed',
-            'gamls_access' => 'boolean',
             'privacy_policy' => 'boolean',
-            'onboard_complete' => 'boolean',
-            'auto_purchase' => 'boolean',
-            'trial_ends_at' => 'datetime',
-            'docusign_access_token' => 'string',
-            'docusign_refresh_token' => 'string',
-            'docusign_token_expires_at' => 'datetime',
-            'stripe_account_id' => 'string',
-            'stripe_customer_id' => 'string',
-            'payment_method_id' => 'string',
-            'is_card' => 'boolean',
-            'is_bank' => 'boolean',
+            'is_active'         => 'boolean',
+            'is_super_admin'    => 'boolean',
         ];
     }
 
@@ -102,42 +73,6 @@ class User extends Authenticatable implements JWTSubject
     }
 
     // restaurant relationship
-
-    public function tables()
-    {
-        return $this->belongsToMany(
-            RestaurantTable::class,
-            // 'staff_table',
-            // 'staff_id',
-            // 'table_id'
-        );
-    }
-
-    public function assignedTables()
-    {
-        return $this->belongsToMany(
-            RestaurantTable::class,
-            'staff_table_assignments',
-            'user_id',
-            'restaurant_table_id'
-        )
-            ->withPivot('notes', 'shift_duration')
-            ->withTimestamps();
-    }
-    public function staffShifts(): HasMany
-    {
-        return $this->hasMany(StaffShift::class, 'user_id');
-    }
-
-    public function membershipPlan()
-    {
-        $activeSub = $this->activeAgentSubscription;
-        if ($activeSub && $activeSub->membershipPlan) {
-            return $activeSub->membershipPlan;
-        }
-
-        return $this->belongsTo(MembershipPlan::class);
-    }
 
     public function currentMembershipPlan()
     {

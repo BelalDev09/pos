@@ -137,7 +137,7 @@ public function index(Request $request) {
 ### Layer 1: Route Middleware
 ```php
 // routes/backend.php
-Route::prefix('admin')->middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])
+Route::prefix('admin')->middleware(['auth', 'verified', 'role_or_permission:admin|super_admin'])
     ->group(function () { ... });
 
 // routes/manager.php
@@ -157,7 +157,7 @@ public function index(Request $request) {
 
 | Role | Controllers | Methods | Authorization |
 |------|-------------|---------|----------------|
-| **admin/superadmin** | Dashboard, User, Permission, Role, FAQ, Staff, Restaurant, Category, MenuItem, Ingredient, OrderHistory, Customer, Setting, DynamicPages | All CRUD operations | `authorizeAdmin()` |
+| **admin/super_admin** | Dashboard, User, Permission, Role, FAQ, Staff, Restaurant, Category, MenuItem, Ingredient, OrderHistory, Customer, Setting, DynamicPages | All CRUD operations | `authorizeAdmin()` |
 | **manager** | ManagerDashboard, Staff, Discount, Approval, Kitchen, Report, CashManagement | All specific operations | `authorizeManager()` |
 | **cashier** | CashierDashboard | All operations | `authorizeCashier()` |
 | **customer** | Own profile only | View/Edit own | No strict check (self-service) |

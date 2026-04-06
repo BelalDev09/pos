@@ -85,7 +85,7 @@ trait AuthorizesRequest
     }
 
     /**
-     * Check if user is admin or superadmin
+     * Check if user is admin or super_admin
      *
      * @param string $message
      * @return bool
@@ -99,7 +99,7 @@ trait AuthorizesRequest
             throw new AuthorizationException($message);
         }
 
-        if (!$user->hasAnyRole(['admin', 'superadmin'])) {
+        if (!$user->hasAnyRole(['admin', 'super_admin'])) {
             throw new AuthorizationException($message);
         }
 

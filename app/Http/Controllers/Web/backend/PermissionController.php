@@ -12,8 +12,8 @@ class PermissionController extends Controller
 {
     public function __construct()
     {
-        // Middleware: manager, admin, superadmin can access
-        $this->middleware(['auth', 'role_or_permission:admin|superadmin']);
+        // Middleware: manager, admin, super_admin can access
+        $this->middleware(['auth', 'role_or_permission:admin|super_admin']);
     }
 
     /**
@@ -22,7 +22,7 @@ class PermissionController extends Controller
     public function index()
     {
         // Authorize: Only admin can view permissions
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to view permissions');
         }
 
@@ -36,7 +36,7 @@ class PermissionController extends Controller
     public function create()
     {
         // Authorize: Only admin can create permissions
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to create permissions');
         }
 
@@ -48,7 +48,7 @@ class PermissionController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to store permissions');
         }
         $validated = $request->validate([
@@ -68,7 +68,7 @@ class PermissionController extends Controller
      */
     public function edit($id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to edit permissions');
         }
         $permission = Permission::findOrFail($id);
@@ -80,7 +80,7 @@ class PermissionController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to update permissions');
         }
         $permission = Permission::findOrFail($id);
@@ -102,7 +102,7 @@ class PermissionController extends Controller
      */
     public function destroy($id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to delete permissions');
         }
         $permission = Permission::findOrFail($id);

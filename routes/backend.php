@@ -1,31 +1,28 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Orders\OrderController;
 use App\Http\Controllers\Web\backend\admin\FAQController;
-use App\Http\Controllers\Web\backend\admin\StaffController;
+use App\Http\Controllers\Web\backend\cashier\CashierDashboardController;
+use App\Http\Controllers\Web\backend\cashier\CashierOrderController;
 use App\Http\Controllers\Web\backend\CategoryController;
 use App\Http\Controllers\Web\backend\CustomerController;
 use App\Http\Controllers\Web\backend\DashboardController;
 use App\Http\Controllers\Web\backend\MenuItemController;
 use App\Http\Controllers\Web\backend\MenuItemIngredientController;
-use App\Http\Controllers\Web\backend\OrderController;
-use App\Http\Controllers\Web\backend\OrderStatusHistoryController;
 use App\Http\Controllers\Web\backend\PermissionController;
-use App\Http\Controllers\Web\backend\RestaurantController;
 use App\Http\Controllers\Web\backend\RestaurantTableController;
 use App\Http\Controllers\Web\backend\RoleController;
 use App\Http\Controllers\Web\backend\SettingController;
 use App\Http\Controllers\Web\backend\settings\DynamicPagesController;
 use App\Http\Controllers\Web\backend\settings\ProfileSettingController;
 use App\Http\Controllers\Web\backend\UserController;
-use App\Http\Controllers\Web\backend\cashier\CashierDashboardController;
-use App\Http\Controllers\Web\backend\cashier\CashierOrderController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public
 Route::get('/', fn() => view('welcome'));
 
-// ── Authenticated Admin/Superadmin
-Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->name('admin.')->group(function () {
+// ── Authenticated Admin/super_admin
+Route::middleware(['auth', 'verified', 'role_or_permission:admin|super_admin'])->name('admin.')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -80,22 +77,6 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
         Route::post('/delete', 'destroy')->name('destroy');
     });
 
-    // Staff
-    Route::controller(StaffController::class)->prefix('staffs')->name('staff.')->group(function () {
-        Route::get('/', 'Index')->name('index');
-        Route::get('/{id}', 'staffshow')->name('show');
-        Route::get('/{id}/edit', 'staffEdit')->name('edit');
-        Route::post('/{id}/update', 'staffUpdate')->name('update');
-        Route::post('/', 'staffStore')->name('store');
-        Route::post('/assign', 'assignStaff')->name('assign');
-    });
-
-    // Restaurants
-    Route::prefix('restaurants')->name('restaurants.')->group(function () {
-        Route::resource('/', RestaurantController::class)->parameters(['' => 'restaurant']);
-        Route::post('/status', [RestaurantController::class, 'changeStatus'])->name('status');
-        Route::post('/bulk-delete', [RestaurantController::class, 'bulkDelete'])->name('bulk-delete');
-    });
 
     // Categories
     Route::prefix('categories')->name('categories.')->group(function () {
@@ -131,27 +112,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
         Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
     });
 
-    // Menu Items
-    Route::prefix('menu-items')->name('menu_items.')->group(function () {
-        Route::get('/', [MenuItemController::class, 'index'])->name('index');
-        Route::get('/create', [MenuItemController::class, 'create'])->name('create');
-        Route::post('/', [MenuItemController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [MenuItemController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [MenuItemController::class, 'update'])->name('update');
-        Route::delete('/{id}', [MenuItemController::class, 'destroy'])->name('destroy');
-        Route::post('/status/change', [MenuItemController::class, 'changeStatus'])->name('status');
-        Route::get('/{id}', [MenuItemController::class, 'show'])->name('show');
-    });
 
-    // Menu Item Ingredients
-    Route::prefix('menu-item-ingredients')->name('menu_item_ingredients.')->group(function () {
-        Route::get('/', [MenuItemIngredientController::class, 'index'])->name('index');
-        Route::get('/create', [MenuItemIngredientController::class, 'create'])->name('create');
-        Route::post('/', [MenuItemIngredientController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [MenuItemIngredientController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [MenuItemIngredientController::class, 'update'])->name('update');
-        Route::delete('/{id}', [MenuItemIngredientController::class, 'destroy'])->name('destroy');
-    });
 
     // Dynamic Pages
     Route::prefix('dynamicpages')->name('dynamicpages.')->controller(DynamicPagesController::class)->group(function () {
@@ -183,19 +144,6 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
         Route::post('/update/{id}', 'update')->name('update');
         Route::delete('/destroy/{id}', 'destroy')->name('destroy');
     });
-
-    // Restaurant Tables
-    Route::resource('restaurant_tables', RestaurantTableController::class)->names('restaurant_tables');
-});
-
-// ── Cashier Routes
-Route::middleware(['auth', 'verified', 'role_and_permission:cashier|admin|superadmin'])->prefix('cashier')->name('cashier.')->group(function () {
-    Route::get('/dashboard', [CashierDashboardController::class, 'index'])->name('dashboard');
-
-    // Orders API for AJAX
-    Route::get('/orders', [CashierOrderController::class, 'index'])->name('orders');
-    Route::post('/orders/{id}/update', [CashierOrderController::class, 'update'])->name('orders.update');
-    Route::post('/orders/{id}/complete', [CashierOrderController::class, 'complete'])->name('orders.complete');
 });
 
 require __DIR__ . '/auth.php';

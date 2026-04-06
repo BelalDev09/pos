@@ -11,8 +11,8 @@ class RoleOrAdmin
     {
         $user = $request->user();
 
-        // Superadmin / Admin automatic access
-        if ($user->hasAnyRole(['superadmin', 'admin'])) {
+        // super_admin / Admin automatic access
+        if ($user->hasAnyRole(['super_admin', 'admin'])) {
             return $next($request);
         }
 

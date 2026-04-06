@@ -28,14 +28,14 @@ class UserController extends Controller
 
     public function __construct()
     {
-        $this->middleware(['auth', 'role_or_permission:admin|superadmin']);
+        $this->middleware(['auth', 'role_or_permission:admin|super_admin']);
         $this->userServiceObj = new UserService();
     }
 
     public function index(Request $request)
     {
         // Authorize: Only admin can view users
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to view users');
         }
 
@@ -100,7 +100,7 @@ class UserController extends Controller
     public function create()
     {
         // Authorize: Only admin can create users
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to create users');
         }
 
@@ -112,7 +112,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         // Authorize: Only admin can store users
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to create users');
         }
 
@@ -143,7 +143,7 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to edit users');
         }
         $user = User::findOrFail($id);
@@ -158,7 +158,7 @@ class UserController extends Controller
 
     public function update(Request $request)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to update users');
         }
         $user = User::findOrFail($request->id);
@@ -197,7 +197,7 @@ class UserController extends Controller
 
     public function changeStatus($id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to change users status');
         }
         $user = User::findOrFail($id);
@@ -220,7 +220,7 @@ class UserController extends Controller
 
     public function destroy(Request $request)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
             abort(403, 'You do not have permission to delelte users');
         }
         if (!Hash::check($request->password, Auth::user()->password)) {
