@@ -30,6 +30,13 @@ class Supplier extends Model
         'payment_terms',
         'notes',
         'is_active',
+        'contact_id',      // CO0001 format
+        'business_name',
+        'advance_balance',
+        'total_purchase_due',
+        'total_return_due',
+        'opening_balance',
+        'status',
     ];
 
     protected $casts = [
@@ -62,5 +69,10 @@ class Supplier extends Model
     public function getAvailableCreditAttribute(): float
     {
         return max(0, (float) $this->credit_limit - (float) $this->outstanding_balance);
+    }
+    public function getContactIdAttribute(): string
+    {
+        $prefix = str_starts_with($this->name, 'Digital') ? 'CN' : 'CO';
+        return $prefix . str_pad($this->id, 4, '0', STR_PAD_LEFT);
     }
 }

@@ -1,97 +1,117 @@
 @extends('backend.app')
-@section('title', 'Users_Edit')
 
-
+@section('title', 'Edit User')
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Dropify/0.2.2/css/dropify.min.css">
+<style>
+    .dropify-wrapper {
+        height: auto !important;
+    }
+</style>
+@endpush
 @section('content')
-    {{-- <div class="app-content content "> --}}
-    <form action="{{ route('admin.user.update') }}" method="POST" enctype="multipart/form-data">@csrf
-        <input type="hidden" name="id" value="{{ $user->id }}">
-        <div class="row">
-            <div class="col-lg-6 m-auto">
-                <div class="card card-body">
-                    <h4 class="mb-4"><span id="Categorytitle">Images</span></h4>
-                    <div class="row mb-2">
-                        <label for="" class="col-3 col-form-label">Avatar</label>
-                        <div class="col-9">
-                            <img id="A" class="mb-2 rounded-circle"
-                                style="width: 50px; height: 50px; object-fit: cover;" src="{{ asset($user->avatar) }}"
-                                alt=""><br>
-                            <input oninput="A.src=window.URL.createObjectURL(this.files[0])" class="form-control-sm"
-                                type="file" name="avatar">
-                        </div>
-                    </div>
-                </div>
-                <div class="card card-body">
-                    <div class="row mb-2">
-                        <label for="" class="col-3 col-form-label">User Role</label>
-                        <div class="col-9">
-                            <select name="role" class="form-control">
 
-                                <option value="">-- Select Role --</option>
+<div class="container-fluid">
 
-                                @foreach ($roles as $r)
-                                    <option value="{{ $r->name }}"
-                                        {{ $user->getRoleNames()->first() == $r->name ? 'selected' : '' }}>
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-12">
 
-                                        {{ $r->name }}
+            {{-- HEADER --}}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-semibold">Edit User</h5>
 
-                                    </option>
-                                @endforeach
-
-                            </select>
-                        </div>
-                        <h4 class="mb-4"><span id="Categorytitle">Info</span></h4>
-                        <div class="row mb-2">
-                            <label for="" class="col-3 col-form-label"><i>Name</i></label>
-                            <div class="col-9">
-                                <input type="text" name="name" class="form-control" placeholder="Name..."
-                                    value="{{ old('name', $user->name) }}">
-                            </div>
-                        </div>
-
-                        <div class="row mb-2">
-                            <label for="" class="col-3 col-form-label"><i>Email</i></label>
-                            <div class="col-9">
-                                <input type="text" name="email" class="form-control" placeholder="email..."
-                                    value="{{ old('email', $user->email) }}">
-                            </div>
-                        </div>
-                        <div class="row mb-2">
-                            <label for="" class="col-3 col-form-label"><i>New Password</i></label>
-                            <div class="col-9">
-                                <input type="password" name="password" class="form-control" placeholder="">
-                            </div>
-                        </div>
-                        <div class="row mb-2">
-                            <label for="" class="col-3 col-form-label"><i>Confirm Password</i></label>
-                            <div class="col-9">
-                                <input type="password" name="password_confirmation" class="form-control" placeholder="">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-success mt-2">
-                                        <i class="ri-save-line"></i> Update
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {{-- <div class="col-lg-6">
-                    <div class="card card-body">
-                        <h4 class="mb-4">More <span id="Categorytitle">Information</span></h4>
-
-                    </div>
-                </div> --}}
-
+                <a href="{{ route('admin.user.list') }}" class="btn btn-sm btn-secondary">
+                    Back
+                </a>
             </div>
 
-    </form>
-    {{-- </div> --}}
+            {{-- CARD --}}
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    <form action="{{ route('admin.user.update') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+
+                        <input type="hidden" name="id" value="{{ $user->id }}">
+
+                        <div class="row g-3">
+
+                            {{-- AVATAR --}}
+                            <div class="col-12 text-center">
+                                <input type="file" name="avatar" class="dropify mt-2"
+                                    data-default-file="{{ $user->avatar ? asset($user->avatar) : '' }}"
+                                    data-height="120" />
+                            </div>
+
+                            {{-- ROLE --}}
+                            <div class="col-12">
+                                <label class="form-label">User Role</label>
+                                <select name="role" class="form-select">
+                                    <option value="">-- Select Role --</option>
+                                    @foreach ($roles as $r)
+                                    <option value="{{ $r->name }}"
+                                        {{ $user->getRoleNames()->first() == $r->name ? 'selected' : '' }}>
+                                        {{ $r->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- NAME --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Name</label>
+                                <input type="text" name="name" class="form-control"
+                                    value="{{ old('name', $user->name) }}">
+                            </div>
+
+                            {{-- EMAIL --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control"
+                                    value="{{ old('email', $user->email) }}">
+                            </div>
+
+                            {{-- PASSWORD --}}
+                            <div class="col-md-6">
+                                <label class="form-label">New Password</label>
+                                <input type="password" name="password" class="form-control">
+                            </div>
+
+                            {{-- CONFIRM --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" name="password_confirmation" class="form-control">
+                            </div>
+
+                        </div>
+
+                        {{-- ACTION --}}
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-success px-4">
+                                Update User
+                            </button>
+
+                            <a href="{{ route('admin.user.list') }}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
 @endsection
-
-
-@push('script')
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Dropify/0.2.2/js/dropify.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.dropify').dropify();
+    });
+</script>
 @endpush

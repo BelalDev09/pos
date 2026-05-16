@@ -1,18 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\AgentSubscription;
 use App\Models\Category;
 use App\Models\Customer;
-use App\Models\MembershipPlan;
-use App\Models\PaymentLog;
 use App\Models\Product;
-use App\Models\User;
-use App\Traits\AuthorizesRequest;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -94,6 +87,20 @@ class DashboardController extends Controller
             // 'top_plans',
             // 'revenue_chart'
         ));
+    }
+
+    public function getAnalytics()
+    {
+        $user = Auth::user();
+        $queryScope = fn($model) => $user && $user->tenant_id
+            ? $model::where('tenant_id', $user->tenant_id)
+            : $model::withoutGlobalScopes();
+
+        return response()->json([
+            'products' => $queryScope(Product::class)->count(),
+            'categories' => $queryScope(Category::class)->count(),
+            'customers' => $queryScope(Customer::class)->count(),
+        ]);
     }
 
     /**

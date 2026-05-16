@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
-use App\Http\Controllers\Controller;
+use App\Helper\Helper;
 use App\Models\SystemSetting;
 use App\Services\Service;
 use App\Services\SettingService;
-use App\Traits\AuthorizesRequest;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,12 +15,11 @@ use Illuminate\Support\Str;
 
 class SettingController extends Service
 {
-    public $settingServiceObj;
+    public SettingService $settingServiceObj;
 
-    public  function  __construct()
+    public function __construct()
     {
         $this->settingServiceObj = new SettingService();
-        // $this->middleware(['auth', 'role_or_permission:admin|super_admin']);
     }
 
     public function adminSetting()
@@ -31,20 +29,24 @@ class SettingController extends Service
 
     public function adminSettingUpdate(Request $request)
     {
-        // Authorize: Only admin can update admin settings
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
-            abort(403, 'You do not have permission to update admin settings');
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            abort(403);
         }
 
         $validator = Validator::make($request->all(), [
-            'admin_title' => 'required|string|max:150',
-            'admin_short_title' => 'nullable|string|max:100',
+            'admin_title'          => 'required|string|max:150',
+            'admin_short_title'    => 'nullable|string|max:100',
             'admin_copyright_text' => 'nullable|string|max:500',
+
+            'admin_logo'    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'admin_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico,webp|max:512',
         ], [
-            'admin_title.required' => 'The admin title is required.',
-            'admin_title.max' => 'The admin title must not exceed 150 characters.',
-            'admin_short_title.max' => 'The admin short title must not exceed 100 characters.',
-            'admin_copyright_text.max' => 'The copyright text must not exceed 500 characters.',
+            'admin_logo.image'    => 'Admin logo must be an image file.',
+            'admin_logo.mimes'    => 'Admin logo must be: jpeg, png, jpg, gif, svg, or webp.',
+            'admin_logo.max'      => 'Admin logo size must not exceed 2MB.',
+            'admin_favicon.image' => 'Admin favicon must be an image file.',
+            'admin_favicon.mimes' => 'Admin favicon must be: jpeg, png, jpg, gif, svg, ico, or webp.',
+            'admin_favicon.max'   => 'Admin favicon size must not exceed 512KB.',
         ]);
 
         if ($validator->fails()) {
@@ -52,70 +54,73 @@ class SettingController extends Service
         }
 
         try {
-            $setting = SystemSetting::firstOrNew();
+            $setting = SystemSetting::firstOrNew([]);
 
-            $data = $request->all();
-            $data['admin_title'] = Str::title($request->admin_title);
+            $data                  = $request->only(['admin_title', 'admin_short_title', 'admin_copyright_text']);
+            $data['admin_title']   = Str::title($request->admin_title);
 
-            if ($request->admin_logo != null) {
-                if (file_exists($setting->admin_logo) && $setting->admin_logo != 'uploads/systems/logo/logo.png') {
-                    unlink($setting->admin_logo);
-                }
-                $path = $this->fileUpload($request->admin_logo, 'systems/logo/');
-                $data['admin_logo'] = $path;
+            if ($request->hasFile('admin_logo')) {
+
+                Helper::deleteFile($setting->getRawAdminLogo());
+                $data['admin_logo'] = Helper::fileUpload(
+                    $request->file('admin_logo'),
+                    'systems/logo',
+                    'admin-logo'
+                );
             }
 
-            if ($request->admin_favicon != null) {
-                if (file_exists($setting->admin_favicon) && $setting->admin_favicon != 'uploads/systems/favicon/favico.png') {
-                    unlink($setting->admin_favicon);
-                }
-                $path = $this->fileUpload($request->admin_favicon, 'systems/favicon/');
-                $data['admin_favicon'] = $path;
+
+            if ($request->hasFile('admin_favicon')) {
+                Helper::deleteFile($setting->getRawAdminFavicon());
+                $data['admin_favicon'] = Helper::fileUpload(
+                    $request->file('admin_favicon'),
+                    'systems/favicon',
+                    'admin-favicon'
+                );
             }
 
-            $setting->update($data);
+            $setting->fill($data)->save();
 
-            return redirect()->back()->with('success', 'Update information successfully');
+            return redirect()->back()->with('success', 'Updated successfully');
         } catch (\Exception $e) {
-            return $e->getMessage();
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
     public function systemSetting()
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
-            abort(403, 'You do not have permission to view admin settings');
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            abort(403);
         }
 
-        $data['setting'] = SystemSetting::first();
+        $data['setting'] = SystemSetting::firstOrNew([]);
 
         return view('backend.layout.setting.system-setting')->with($data);
     }
 
     public function systemSettingUpdate(Request $request)
     {
-        // Authorize: Only admin can update system settings
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
-            abort(403, 'You do not have permission to update admin settings');
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            abort(403);
         }
+
         $validator = Validator::make($request->all(), [
-            'system_title' => 'required|string|max:150',
+            'system_title'       => 'required|string|max:150',
             'system_short_title' => 'nullable|string|max:100',
-            'tag_line' => 'nullable|string|max:255',
-            'company_name' => 'required|string|max:150',
-            'phone_code' => 'required|string|max:5',
-            'phone_number' => 'required|string|max:15|regex:/^\d+$/',
-            'email' => 'required|email|max:150',
-            'copyright' => 'nullable|string|max:500',
+            'tag_line'           => 'nullable|string|max:255',
+            'company_name'       => 'required|string|max:150',
+            'phone_code'         => 'required|string|max:5',
+            'phone_number'       => 'required|string|max:15|regex:/^\d+$/',
+            'email'              => 'required|email|max:150',
+            'copyright_text'     => 'nullable|string|max:500',
         ], [
-            'system_title.required' => 'The system title is required.',
-            'system_title.max' => 'The system title must not exceed 150 characters.',
-            'company_name.required' => 'The company name is required.',
-            'phone_code.required' => 'The phone code is required.',
-            'phone_number.required' => 'The phone number is required.',
-            'phone_number.regex' => 'The phone number must contain only digits.',
-            'email.required' => 'The email is required.',
-            'email.email' => 'Enter a valid email address.',
+            'logo.image'    => 'Logo must be an image file.',
+            'logo.mimes'    => 'Logo must be: jpeg, png, jpg, gif, svg, or webp.',
+            'logo.max'      => 'Logo size must not exceed 2MB.',
+            'favicon.image' => 'Favicon must be an image file.',
+            'favicon.mimes' => 'Favicon must be: jpeg, png, jpg, gif, svg, ico, or webp.',
+            'favicon.max'   => 'Favicon size must not exceed 512KB.',
+            'phone_number.regex' => 'Phone number must contain only digits.',
         ]);
 
         if ($validator->fails()) {
@@ -123,61 +128,75 @@ class SettingController extends Service
         }
 
         try {
-            $setting = SystemSetting::firstOrNew();
+            $setting = SystemSetting::firstOrNew([]);
 
-            $data = $request->all();
+            $data = $request->only([
+                'system_title',
+                'system_short_title',
+                'tag_line',
+                'company_name',
+                'phone_code',
+                'phone_number',
+                'email',
+                'copyright_text',
+            ]);
             $data['system_title'] = Str::title($request->system_title);
-            if ($request->logo != null) {
-                if (file_exists($setting->logo) && $setting->logo != 'uploads/systems/logo/logo.png') {
-                    unlink($setting->logo);
-                }
-                $path = $this->fileUpload($request->logo, 'systems/logo/');
-                $data['logo'] = $path;
+
+            if ($request->hasFile('logo')) {
+                Helper::deleteFile($setting->getRawLogo());
+                $data['logo'] = Helper::fileUpload(
+                    $request->file('logo'),
+                    'systems/logo',
+                    'logo'
+                );
             }
 
-            if ($request->favicon != null) {
-                if (file_exists($setting->favicon) && $setting->favicon != 'uploads/systems/favicon/favico.png') {
-                    unlink($setting->favicon);
-                }
-                $path = $this->fileUpload($request->favicon, 'systems/favicon/');
-                $data['favicon'] = $path;
+            if ($request->hasFile('favicon')) {
+                Helper::deleteFile($setting->getRawFavicon());
+                $data['favicon'] = Helper::fileUpload(
+                    $request->file('favicon'),
+                    'systems/favicon',
+                    'favicon'
+                );
             }
 
-            $setting->update($data);
+            $setting->fill($data)->save();
 
-            return redirect()->back()->with('success', 'Update information successfully');
+            return redirect()->back()->with('success', 'Updated successfully');
         } catch (\Exception $e) {
-            return $e->getMessage();
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
     public function mail()
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
-            abort(403, 'You do not have permission to view mail');
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            abort(403);
         }
+
         return view('backend.layout.setting.mail');
     }
 
     public function mailstore(Request $request)
     {
-        // Authorize: Only admin can configure mail settings
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
-            abort(403, 'You do not have permission to mail store');
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            abort(403);
         }
 
         $request->validate([
-            'mail_mailer' => 'required|string',
-            'mail_host' => 'required|string',
-            'mail_port' => 'required|string',
-            'mail_username' => 'nullable|string',
-            'mail_password' => 'nullable|string',
-            'mail_encryption' => 'nullable|string',
+            'mail_mailer'       => 'required|string',
+            'mail_host'         => 'required|string',
+            'mail_port'         => 'required|string',
+            'mail_username'     => 'nullable|string',
+            'mail_password'     => 'nullable|string',
+            'mail_encryption'   => 'nullable|string',
             'mail_from_address' => 'required|string',
         ]);
+
         try {
             $envContent = File::get(base_path('.env'));
-            $lineBreak = "\n";
+            $lineBreak  = "\n";
+
             $envContent = preg_replace([
                 '/MAIL_MAILER=(.*)\s/',
                 '/MAIL_HOST=(.*)\s/',
@@ -187,23 +206,22 @@ class SettingController extends Service
                 '/MAIL_ENCRYPTION=(.*)\s/',
                 '/MAIL_FROM_ADDRESS=(.*)\s/',
             ], [
-                'MAIL_MAILER=' . $request->mail_mailer . $lineBreak,
-                'MAIL_HOST=' . $request->mail_host . $lineBreak,
-                'MAIL_PORT=' . $request->mail_port . $lineBreak,
-                'MAIL_USERNAME=' . $request->mail_username . $lineBreak,
-                'MAIL_PASSWORD=' . $request->mail_password . $lineBreak,
-                'MAIL_ENCRYPTION=' . $request->mail_encryption . $lineBreak,
+                'MAIL_MAILER='       . $request->mail_mailer       . $lineBreak,
+                'MAIL_HOST='         . $request->mail_host         . $lineBreak,
+                'MAIL_PORT='         . $request->mail_port         . $lineBreak,
+                'MAIL_USERNAME='     . $request->mail_username     . $lineBreak,
+                'MAIL_PASSWORD='     . $request->mail_password     . $lineBreak,
+                'MAIL_ENCRYPTION='   . $request->mail_encryption   . $lineBreak,
                 'MAIL_FROM_ADDRESS=' . '"' . $request->mail_from_address . '"' . $lineBreak,
             ], $envContent);
 
             if ($envContent !== null) {
                 File::put(base_path('.env'), $envContent);
             }
+
             return back()->with('success', 'Updated successfully');
         } catch (Exception $e) {
             return back()->with('error', 'Failed to update');
         }
-
-        return redirect()->back();
     }
 }

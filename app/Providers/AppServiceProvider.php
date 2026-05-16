@@ -2,8 +2,7 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\URL;
+use App\Models\SystemSetting;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Socialite\Facades\Socialite;
@@ -58,6 +57,10 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with(compact('notifications', 'unreadCount'));
+        });
+        // global view share
+        View::composer('backend.partials.sidebar', function ($view) {
+            $view->with('system_setting', SystemSetting::first());
         });
     }
 }

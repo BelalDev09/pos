@@ -1,14 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\API\user;
+namespace App\Http\Controllers\API\User;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\PaymentSummaryResource;
 use App\Models\Payment;
 use App\Traits\apiresponse;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -45,7 +42,15 @@ class PaymentController extends Controller
         });
 
         return $this->success([
-            'payments' => PaymentSummaryResource::collection($bookings),
+            'payments' => $bookings->through(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'transaction_id' => optional($booking->payment)->transaction_id,
+                    'amount' => optional($booking->payment)->amount,
+                    'status' => optional($booking->payment)->status,
+                    'created_at' => optional($booking->created_at)->toDateTimeString(),
+                ];
+            }),
             'summary' => [
                 'total_amount' => round($totalAmount, 2),
             ]

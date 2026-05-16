@@ -1,11 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\backend\Auth;
 use App\Http\Controllers\API\UserAuthController;
 use App\Http\Controllers\API\UserController;
-
 use Illuminate\Support\Facades\Route;
-
 
 Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('logout', [UserAuthController::class, 'logout']);

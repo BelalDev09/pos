@@ -1,221 +1,213 @@
-{{-- File: resources/views/pos/index.blade.php --}}
-
-@extends('backend.app') {{-- Updated layout --}}
+@extends('backend.app')
 
 @section('content')
-<div class="flex h-screen w-full" x-data="posApp()" x-init="init()">
+<div class="h-screen bg-[#f3f6f9] overflow-hidden"
+     x-data="posApp()" x-init="init()">
 
-    {{-- ── LEFT PANEL: Product Grid  --}}
-    <div class="flex flex-col w-3/5 bg-white border-r border-gray-200">
+    <div class="h-full flex gap-6 p-6">
 
-        {{-- Search / Barcode Bar --}}
-        <div class="p-3 bg-gray-50 border-b border-gray-200">
-            <div class="relative">
-                <input type="text"
-                    id="barcode-input"
-                    x-model="searchQuery"
-                    @input.debounce.300ms="searchProducts()"
-                    @keydown.enter.prevent="handleEnterKey()"
-                    placeholder="🔍 Scan barcode or search product (F2)"
-                    class="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    autocomplete="off">
-                <button @click="toggleCameraScanner()"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600">
-                    📷
-                </button>
+        {{-- ================= LEFT: PRODUCTS ================= --}}
+        <section class="w-3/5 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+            {{-- TOP BAR --}}
+            <div class="px-5 py-4 border-b bg-white flex items-center gap-4">
+
+                <div class="relative flex-1">
+                    <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+
+                    <input
+                        id="barcode-input"
+                        x-model="searchQuery"
+                        @input.debounce.300ms="searchProducts()"
+                        @keydown.enter.prevent="handleEnterKey()"
+                        placeholder="Search product, barcode..."
+                        class="w-full pl-11 pr-4 py-3 rounded-lg bg-gray-50 border border-gray-200
+                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                </div>
+
+                <div class="hidden xl:flex text-xs text-gray-400 space-y-1 leading-tight">
+                    <div><span class="font-semibold text-gray-500">F2</span> Search</div>
+                    <div><span class="font-semibold text-gray-500">Enter</span> Add</div>
+                </div>
+
             </div>
-        </div>
 
-        {{-- Category Pills --}}
-        <div class="flex gap-2 px-3 py-2 overflow-x-auto border-b border-gray-100">
-            <button @click="selectedCategory = null; loadProducts()"
-                :class="selectedCategory === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'"
-                class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors">
-                All
-            </button>
-            @foreach($categories as $category)
-            <button @click="selectedCategory = {{ $category->id }}; loadProducts()"
-                :class="selectedCategory === {{ $category->id }} ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'"
-                class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors">
-                {{ $category->name }}
-            </button>
-            @endforeach
-        </div>
+            {{-- CATEGORY BAR --}}
+            <div class="px-5 py-3 border-b bg-[#f8fafc]">
 
-        {{-- Product Grid --}}
-        <div class="flex-1 overflow-y-auto p-3">
-            <div class="grid grid-cols-3 xl:grid-cols-4 gap-3" id="product-grid">
+                <div class="flex gap-2 overflow-x-auto no-scrollbar">
 
-                {{-- Loading state --}}
-                <template x-if="loadingProducts">
-                    <div class="col-span-full flex justify-center py-12">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                </template>
+                    <button
+                        @click="selectedCategory=null;loadProducts()"
+                        class="px-4 py-2 text-xs font-medium rounded-lg transition border"
+                        :class="selectedCategory===null
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-200'">
+                        All
+                    </button>
 
-                {{-- Products --}}
-                <template x-for="product in products" :key="product.id">
-                    <div @click="addToCart(product.default_variant_id ?? product.id)"
-                        class="bg-white border border-gray-200 rounded-xl p-3 cursor-pointer
-                                hover:border-blue-400 hover:shadow-md transition-all select-none"
-                        :class="{'opacity-50 cursor-not-allowed': product.stock_qty <= 0 && product.track_stock}">
+                    @foreach($categories as $category)
+                        <button
+                            @click="selectedCategory={{ $category->id }};loadProducts()"
+                            class="px-4 py-2 text-xs font-medium rounded-lg transition border whitespace-nowrap"
+                            :class="selectedCategory==={{ $category->id }}
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-600 border-gray-200'">
+                            {{ $category->name }}
+                        </button>
+                    @endforeach
 
-                        {{-- Product Image --}}
-                        <div class="aspect-square rounded-lg bg-gray-100 mb-2 overflow-hidden flex items-center justify-center">
-                            <img x-show="product.image"
-                                :src="'/storage/' + product.image"
-                                :alt="product.name"
-                                class="w-full h-full object-cover">
-                            <span x-show="!product.image" class="text-3xl">📦</span>
+                </div>
+            </div>
+
+            {{-- PRODUCTS GRID --}}
+            <div class="flex-1 overflow-y-auto p-5 bg-[#f3f6f9]">
+
+                <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+
+                    {{-- loading --}}
+                    <template x-if="loadingProducts">
+                        <div class="col-span-full flex justify-center py-16">
+                            <div class="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
                         </div>
+                    </template>
 
-                        {{-- Product Info --}}
-                        <p class="text-xs text-gray-500 truncate" x-text="product.category?.name"></p>
-                        <p class="text-sm font-semibold text-gray-800 truncate leading-tight" x-text="product.name"></p>
+                    {{-- product card --}}
+                    <template x-for="product in products" :key="product.id">
+                        <div
+                            @click="addToCart(product.default_variant_id ?? product.id)"
+                            class="bg-white border border-gray-200 rounded-lg p-3 cursor-pointer
+                                   hover:shadow-md hover:-translate-y-0.5 transition">
 
-                        {{-- Price & Stock --}}
-                        <div class="flex items-center justify-between mt-1">
-                            <span class="text-blue-700 font-bold text-sm" x-text="formatMoney(product.selling_price)"></span>
-                            <span class="text-xs px-1.5 py-0.5 rounded"
-                                :class="{
-                                      'bg-green-100 text-green-700': product.stock_qty > 5,
-                                      'bg-yellow-100 text-yellow-700': product.stock_qty > 0 && product.stock_qty <= 5,
-                                      'bg-red-100 text-red-700': product.stock_qty <= 0
-                                  }"
-                                x-text="product.track_stock ? product.stock_qty + ' left' : '∞'">
-                            </span>
+                            {{-- IMAGE --}}
+                            <div class="aspect-square rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden mb-3">
+                                <img x-show="product.image"
+                                     :src="'/storage/' + product.image"
+                                     class="w-full h-full object-cover">
+
+                                <i x-show="!product.image" class="ri-box-3-line text-3xl text-gray-300"></i>
+                            </div>
+
+                            {{-- CATEGORY --}}
+                            <p class="text-[10px] text-gray-400 uppercase truncate"
+                               x-text="product.category?.name"></p>
+
+                            {{-- NAME --}}
+                            <p class="text-sm font-semibold text-gray-800 truncate"
+                               x-text="product.name"></p>
+
+                            {{-- PRICE --}}
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-blue-600 font-bold text-sm"
+                                      x-text="formatMoney(product.selling_price)">
+                                </span>
+
+                                <span class="text-[10px] px-2 py-0.5 rounded-md font-medium"
+                                      :class="{
+                                        'bg-green-100 text-green-700': product.stock_qty > 5,
+                                        'bg-yellow-100 text-yellow-700': product.stock_qty > 0 && product.stock_qty <= 5,
+                                        'bg-red-100 text-red-700': product.stock_qty <= 0
+                                      }"
+                                      x-text="product.track_stock ? product.stock_qty+' pcs' : '∞'">
+                                </span>
+                            </div>
+
                         </div>
-                    </div>
-                </template>
+                    </template>
 
-                {{-- Empty state --}}
-                <template x-if="!loadingProducts && products.length === 0">
-                    <div class="col-span-full text-center py-12 text-gray-400">
-                        <p class="text-4xl mb-2">🔍</p>
-                        <p class="text-sm">No products found</p>
-                    </div>
-                </template>
+                </div>
             </div>
-        </div>
-    </div>
 
-    {{-- ── RIGHT PANEL: Cart --}}
-    <div class="flex flex-col w-2/5 bg-gray-50">
+        </section>
 
-        {{-- Cart Header --}}
-        <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-            <div>
-                <h2 class="font-semibold text-gray-800">Current Sale</h2>
-                <p class="text-xs text-gray-500" x-text="cart.item_count + ' items'"></p>
-            </div>
-            <div class="flex gap-2">
-                {{-- Customer selector --}}
-                <button @click="openCustomerModal()"
-                    class="text-sm px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1">
-                    <span x-text="selectedCustomer ? selectedCustomer.name : 'Walk-in'"></span>
-                    <span class="text-gray-400">▾</span>
-                </button>
+        {{-- ================= RIGHT: CART ================= --}}
+        <aside class="w-2/5 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+            {{-- HEADER --}}
+            <div class="px-5 py-4 border-b flex justify-between items-center bg-white">
+
+                <div>
+                    <h2 class="font-semibold text-gray-800">POS Cart</h2>
+                    <p class="text-xs text-gray-400" x-text="cart.item_count + ' items'"></p>
+                </div>
+
                 <button @click="clearCart()"
-                    class="text-sm px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
-                    x-show="cart.item_count > 0">
+                        class="text-xs px-3 py-1.5 border border-red-200 text-red-600 rounded-md hover:bg-red-50">
                     Clear
                 </button>
+
             </div>
-        </div>
 
-        {{-- Cart Items --}}
-        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-2">
+            {{-- ITEMS --}}
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f3f6f9]">
 
-            <template x-if="cart.item_count === 0">
-                <div class="flex flex-col items-center justify-center h-40 text-gray-400">
-                    <span class="text-5xl mb-2">🛒</span>
-                    <p class="text-sm">Cart is empty</p>
-                    <p class="text-xs">Scan or click a product to add</p>
+                <template x-if="cart.item_count===0">
+                    <div class="h-full flex flex-col items-center justify-center text-gray-400">
+                        <i class="ri-shopping-cart-line text-5xl mb-2"></i>
+                        <p class="font-medium">Cart Empty</p>
+                    </div>
+                </template>
+
+                <template x-for="item in cart.items" :key="item.variant_id">
+                    @include('components.pos.cart-item')
+                </template>
+
+            </div>
+
+            {{-- TOTAL --}}
+            <div class="border-t bg-white p-5 space-y-2">
+
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span>Subtotal</span>
+                    <span x-text="formatMoney(cart.subtotal)"></span>
                 </div>
-            </template>
 
-            <template x-for="item in cart.items" :key="item.variant_id">
-                @include('components.pos.cart-item')
-            </template>
-        </div>
+                <div class="flex justify-between text-sm text-red-500" x-show="cart.discount_total>0">
+                    <span>Discount</span>
+                    <span x-text="'-'+formatMoney(cart.discount_total)"></span>
+                </div>
 
-        {{-- Coupon input --}}
-        <div class="px-3 pb-2" x-show="cart.item_count > 0">
-            <div class="flex gap-2" x-show="!cart.coupon">
-                <input type="text"
-                    x-model="couponCode"
-                    @keydown.enter="applyCoupon()"
-                    placeholder="Coupon code..."
-                    class="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg">
-                <button @click="applyCoupon()"
-                    class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                    Apply
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span>Tax</span>
+                    <span x-text="formatMoney(cart.tax_total)"></span>
+                </div>
+
+                <div class="flex justify-between pt-2 border-t">
+                    <span class="font-bold text-lg text-gray-900">Total</span>
+                    <span class="font-bold text-xl text-blue-600"
+                          x-text="formatMoney(cart.grand_total)">
+                    </span>
+                </div>
+
+            </div>
+
+            {{-- ACTIONS --}}
+            <div class="grid grid-cols-3 gap-3 p-4 border-t bg-white">
+
+                <button @click="openPayment('cash')"
+                        class="bg-green-600 text-white py-3 rounded-lg text-sm font-medium hover:shadow">
+                    Cash
                 </button>
-            </div>
-            <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2"
-                x-show="cart.coupon">
-                <span class="text-green-700 text-sm font-medium" x-text="'Coupon: ' + cart.coupon?.code"></span>
-                <button @click="removeCoupon()" class="text-red-400 hover:text-red-600 text-xs">Remove</button>
-            </div>
-        </div>
 
-        {{-- Order Totals --}}
-        <div class="bg-white border-t border-gray-200 px-4 py-3 space-y-1.5">
-            <div class="flex justify-between text-sm text-gray-600">
-                <span>Subtotal</span>
-                <span x-text="formatMoney(cart.subtotal)"></span>
-            </div>
-            <div class="flex justify-between text-sm text-red-500" x-show="cart.discount_total > 0">
-                <span>Discount</span>
-                <span x-text="'- ' + formatMoney(cart.discount_total)"></span>
-            </div>
-            <div class="flex justify-between text-sm text-gray-600">
-                <span>Tax</span>
-                <span x-text="formatMoney(cart.tax_total)"></span>
-            </div>
-            <div class="flex justify-between text-lg font-bold text-gray-900 border-t pt-2 mt-2">
-                <span>TOTAL</span>
-                <span x-text="formatMoney(cart.grand_total)" class="text-blue-700"></span>
-            </div>
-        </div>
+                <button @click="openPayment('card')"
+                        class="bg-blue-600 text-white py-3 rounded-lg text-sm font-medium hover:shadow">
+                    Card
+                </button>
 
-        {{-- Payment Buttons --}}
-        <div class="p-3 grid grid-cols-3 gap-2 bg-white border-t">
-            <button @click="openPayment('cash')"
-                :disabled="cart.item_count === 0"
-                class="py-4 bg-green-600 text-white rounded-xl font-semibold
-                           hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed
-                           flex flex-col items-center gap-1">
-                <span class="text-xl">💵</span>
-                <span class="text-xs">Cash</span>
-            </button>
-            <button @click="openPayment('card')"
-                :disabled="cart.item_count === 0"
-                class="py-4 bg-blue-600 text-white rounded-xl font-semibold
-                           hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed
-                           flex flex-col items-center gap-1">
-                <span class="text-xl">💳</span>
-                <span class="text-xs">Card</span>
-            </button>
-            <button @click="openPayment('split')"
-                :disabled="cart.item_count === 0"
-                class="py-4 bg-purple-600 text-white rounded-xl font-semibold
-                           hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed
-                           flex flex-col items-center gap-1">
-                <span class="text-xl">⚡</span>
-                <span class="text-xs">Split</span>
-            </button>
-        </div>
+                <button @click="openPayment('split')"
+                        class="bg-purple-600 text-white py-3 rounded-lg text-sm font-medium hover:shadow">
+                    Split
+                </button>
+
+            </div>
+
+        </aside>
+
     </div>
 
-    {{-- ── Modals  --}}
     @include('components.pos.payment-modal')
     @include('components.pos.numpad')
-</div>
 
-@push('scripts')
-<script>
-    import('/resources/js/pos/cart.js');
-</script>
-@endpush
+</div>
 @endsection

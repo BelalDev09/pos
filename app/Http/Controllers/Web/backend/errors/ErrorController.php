@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\errors;
+namespace App\Http\Controllers\Web\Backend\Errors;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;

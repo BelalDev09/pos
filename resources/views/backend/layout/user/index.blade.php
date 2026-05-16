@@ -1,292 +1,387 @@
 @extends('backend.app')
+
+@section('title', 'Users List')
 @push('styles')
-    {{-- <link rel="stylesheet" href="{{ asset('backend/assets/datatable/css/datatables.min.css') }}"> --}}
+{{-- SweetAlert2 CSS --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+<style>
+    .dropify-wrapper {
+        height: auto !important;
+    }
+</style>
+<style>
+    .swal2-show-custom {
+        animation: slideInRight 0.35s ease-out;
+    }
+
+    .swal2-hide-custom {
+        animation: fadeOut 0.2s ease-in;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+        }
+    }
+</style>
 @endpush
-@section('title', 'Users')
 @section('content')
-    {{-- <div class="app-content content "> --}}
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title">Users List</h3>
-            <div>
-                <button type='button' style='min-width: 115px;' class='btn btn-danger delete_btn d-none'
-                    onclick='multi_delete()'>Bulk Delete</button>
-                <a href="{{ route('admin.user.create') }}" class="btn btn-primary" type="button">
-                    <span>Add User</span>
-                </a>
-            </div>
+
+<div class="container-fluid">
+
+    {{-- HEADER --}}
+    <div class="row align-items-center mb-3">
+        <div class="col">
+            <h5 class="mb-0 fw-semibold">Users</h5>
         </div>
 
+        <div class="col-auto">
+            <div class="d-flex gap-2">
+
+                <button type="button" class="btn btn-soft-danger btn-sm delete_btn d-none" onclick="multi_delete()">
+                    <i class="ri-delete-bin-line me-1"></i> Bulk Delete
+                </button>
+
+                <a href="{{ route('admin.user.create') }}" class="btn btn-success btn-sm">
+                    <i class="ri-add-line me-1"></i> Add User
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- TABLE CARD --}}
+    <div class="card shadow-sm border-0">
         <div class="card-body">
 
-            <div class="table-responsive mt-4 p-4 card-datatable table-responsive pt-0">
-                <table class="table align-middle table-nowrap mb-0 table-hover" id="data-table">
-                    <thead>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle table-nowrap" id="data-table" width="100%">
+
+                    <thead class="table-light">
                         <tr>
-                            <th>
-                                <div class="form-checkbox">
-                                    <input type="checkbox" class="form-check-input" id="select_all" onclick="select_all()">
-                                    <label class="form-check-label" for="select_all"></label>
-                                </div>
+                            <th width="40">
+                                <input type="checkbox" id="select_all" class="form-check-input">
                             </th>
+
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Action</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
+
                     <tbody></tbody>
+
                 </table>
             </div>
+
         </div>
     </div>
-    {{-- </div> --}}
 
-    @push('scripts')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</div>
 
-        <script>
-            $(document).ready(function() {
+@endsection
 
-                $.ajaxSetup({
-                    headers: {
-                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.js"></script>
+
+@if (session('success') || session('error') || session('warning') || session('message') || session('info'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const toastConfig = {
+            success: {
+                background: '#ecfdf5',
+                color: '#065f46',
+                border: '#10b981',
+                iconColor: '#10b981'
+            },
+            error: {
+                background: '#fef2f2',
+                color: '#991b1b',
+                border: '#ef4444',
+                iconColor: '#ef4444'
+            },
+            warning: {
+                background: '#fffbeb',
+                color: '#92400e',
+                border: '#f59e0b',
+                iconColor: '#f59e0b'
+            },
+            info: {
+                background: '#eff6ff',
+                color: '#1e3a8a',
+                border: '#3b82f6',
+                iconColor: '#3b82f6'
+            }
+        };
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            showClass: {
+                popup: 'swal2-show-custom'
+            },
+            hideClass: {
+                popup: 'swal2-hide-custom'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        window.showToast = function(type, message) {
+
+            const config = toastConfig[type] || toastConfig.info;
+
+            Toast.fire({
+                icon: type,
+                title: message,
+                background: config.background,
+                color: config.color,
+                didOpen: (toast) => {
+                    toast.style.borderLeft = `6px solid ${config.border}`;
+                    toast.style.borderRadius = '10px';
+                    toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.08)';
+
+                    const icon = toast.querySelector('.swal2-icon');
+                    if (icon) {
+                        icon.style.color = config.iconColor;
                     }
+                }
+            });
+        };
+
+        // Laravel session auto trigger
+        @if(session('success'))
+        showToast('success', @json(session('success')));
+        @endif
+
+        @if(session('error'))
+        showToast('error', @json(session('error')));
+        @endif
+
+        @if(session('warning'))
+        showToast('warning', @json(session('warning')));
+        @endif
+
+        @if(session('info'))
+        showToast('info', @json(session('info')));
+        @endif
+
+    });
+</script>
+@endif
+<script>
+    $(document).ready(function() {
+
+        $.ajaxSetup({
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+            }
+        });
+
+        $('#data-table').DataTable({
+
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            autoWidth: false,
+            order: [],
+
+            ajax: "{{ route('admin.user.list') }}",
+
+            columns: [
+
+                {
+                    data: 'bulk_check',
+                    orderable: false,
+                    searchable: false
+                },
+
+                {
+                    data: 'name'
+                },
+                {
+                    data: 'email'
+                },
+                {
+                    data: 'role'
+                },
+
+                {
+                    data: 'status',
+                    orderable: false,
+                    searchable: false
+                },
+
+                {
+                    data: 'action',
+                    orderable: false,
+                    searchable: false,
+                    className: "text-end"
+                }
+            ]
+        });
+
+    });
+</script>
+
+
+{{-- STATUS --}}
+<script>
+    function changeStatus(id) {
+
+        Swal.fire({
+            title: 'Change Status?',
+            text: 'Update user status',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0ab39c',
+            confirmButtonText: 'Yes'
+        }).then((result) => {
+
+            if (!result.isConfirmed) return;
+
+            let url = "{{ route('admin.user.status', ':id') }}".replace(':id', id);
+
+            $.get(url, function(resp) {
+
+                Swal.fire({
+                    icon: 'success',
+                    title: resp.message,
+                    timer: 1200,
+                    showConfirmButton: false
                 });
 
-                if (!$.fn.DataTable.isDataTable('#data-table')) {
+                $('#data-table').DataTable().ajax.reload(null, false);
+            });
 
-                    $('#data-table').DataTable({
+        });
+    }
+</script>
 
-                        processing: true,
-                        serverSide: true,
-                        responsive: true,
-                        order: [],
 
-                        lengthMenu: [
-                            [25, 50, 100, 200, 500, -1],
-                            [25, 50, 100, 200, 500, "All"]
-                        ],
+{{-- DELETE --}}
+<script>
+    async function deleteUser(id) {
 
-                        language: {
-                            processing: `<div class="text-center">
-                    <div class="spinner-border text-primary" style="width:3rem;height:3rem">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>`
-                        },
+        const {
+            value: password
+        } = await Swal.fire({
 
-                        ajax: {
-                            url: "{{ route('admin.user.list') }}",
-                            type: "GET"
-                        },
+            title: "Delete User?",
+            input: "password",
+            inputLabel: "Enter password to confirm",
+            inputPlaceholder: "Password",
+            showCancelButton: true,
+            confirmButtonText: "Delete"
 
-                        columns: [{
-                                data: 'bulk_check',
-                                orderable: false,
-                                searchable: false
-                            },
-                            {
-                                data: 'name'
-                            },
-                            {
-                                data: 'email'
-                            },
-                            {
-                                data: 'role'
-                            },
-                            {
-                                data: 'status',
-                                orderable: false,
-                                searchable: false
-                            },
-                            {
-                                data: 'action',
-                                orderable: false,
-                                searchable: false
-                            }
-                        ]
+        });
 
+        if (!password) return;
+
+        let formData = new FormData();
+        formData.append('id', id);
+        formData.append('password', password);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        $.ajax({
+            url: "{{ route('admin.user.destroy') }}",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+
+            success: function(res) {
+
+                if (res.success) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: res.message,
+                        timer: 1200,
+                        showConfirmButton: false
                     });
 
+                    $('#data-table').DataTable().ajax.reload(null, false);
+
+                } else {
+
+                    Swal.fire('Error', res.message, 'error');
                 }
+            }
+        });
+    }
+</script>
 
-            });
-        </script>
 
+{{-- BULK DELETE --}}
+<script>
+    function multi_delete() {
 
-        {{-- STATUS CHANGE --}}
-        <script>
-            function changeStatus(id) {
+        let ids = [];
+
+        $('.select_data:checked').each(function() {
+            ids.push($(this).val());
+        });
+
+        if (!ids.length) {
+            Swal.fire('Warning', 'Select at least one user', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Delete Users?',
+            text: "This cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f06548',
+            confirmButtonText: 'Yes, delete'
+        }).then((result) => {
+
+            if (!result.isConfirmed) return;
+
+            $.post("{{ route('admin.user.bulk-delete') }}", {
+                ids: ids,
+                _token: "{{ csrf_token() }}"
+            }, function(res) {
 
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: 'You want to update the status?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes'
-                }).then((result) => {
-
-                    if (result.isConfirmed) {
-
-                        let url = "{{ route('admin.user.status', ':id') }}".replace(':id', id);
-
-                        $.ajax({
-
-                            url: url,
-                            type: 'GET',
-
-                            success: function(resp) {
-
-                                if (resp.success) {
-
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: resp.message,
-                                        showConfirmButton: false,
-                                        timer: 1000
-                                    });
-
-                                } else {
-
-                                    Swal.fire('Error', resp.message, 'error');
-
-                                }
-
-                                $('#data-table').DataTable().ajax.reload();
-
-                            }
-
-                        });
-
-                    }
-
+                    icon: 'success',
+                    title: res.message,
+                    timer: 1200,
+                    showConfirmButton: false
                 });
 
-            }
-        </script>
+                $('#data-table').DataTable().ajax.reload(null, false);
+            });
 
-
-        {{-- DELETE USER --}}
-        <script>
-            async function deleteUser(id) {
-
-                const {
-                    value: password
-                } = await Swal.fire({
-
-                    title: "Delete Account?",
-                    input: "password",
-                    inputLabel: "Enter your password",
-                    inputPlaceholder: "Enter password",
-                    showCancelButton: true,
-                    confirmButtonText: "Delete",
-                    cancelButtonText: "Cancel"
-
-                })
-
-                if (password) {
-
-                    let formData = new FormData();
-
-                    formData.append('id', id)
-                    formData.append('password', password)
-                    formData.append('_token', '{{ csrf_token() }}')
-
-                    $.ajax({
-
-                        url: "{{ route('admin.user.destroy') }}",
-                        type: "POST",
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-
-                        success: function(response) {
-
-                            if (response.success) {
-
-                                Swal.fire('Deleted!', response.message, 'success')
-
-                                $('#data-table').DataTable().ajax.reload()
-
-                            } else {
-
-                                Swal.fire('Error', response.message, 'error')
-
-                            }
-
-                        },
-
-                        error: function() {
-
-                            Swal.fire('Error', 'Something went wrong', 'error')
-
-                        }
-
-                    })
-
-                }
-
-            }
-        </script>
-
-
-        {{-- BULK DELETE --}}
-        <script>
-            function multi_delete() {
-
-                let ids = []
-
-                $('.select_data:checked').each(function() {
-                    ids.push($(this).val())
-                })
-
-                if (ids.length === 0) {
-
-                    Swal.fire('Error', 'Please select at least one record', 'warning')
-
-                    return
-
-                }
-
-                Swal.fire({
-
-                    title: 'Are you sure?',
-                    text: 'Selected users will be deleted',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Delete'
-
-                }).then((result) => {
-
-                    if (result.isConfirmed) {
-
-                        $.ajax({
-
-                            url: "{{ route('admin.user.bulk-delete') }}",
-                            type: "POST",
-                            data: {
-                                ids: ids,
-                                _token: "{{ csrf_token() }}"
-                            },
-
-                            success: function(resp) {
-
-                                Swal.fire('Deleted', resp.message, 'success')
-
-                                $('#data-table').DataTable().ajax.reload()
-
-                            }
-
-                        })
-
-                    }
-
-                })
-
-            }
-        </script>
-    @endpush
-@endsection
+        });
+    }
+</script>
+@endpush

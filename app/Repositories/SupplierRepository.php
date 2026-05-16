@@ -19,7 +19,7 @@ class SupplierRepository
                 !empty($filters['search']),
                 fn($q) =>
                 $q->where('name', 'like', "%{$filters['search']}%")
-                    ->orWhere('company_name', 'like', "%{$filters['search']}%")
+                    ->orWhere('business_name', 'like', "%{$filters['search']}%")
                     ->orWhere('phone', 'like', "%{$filters['search']}%")
             )
             ->when(
@@ -42,7 +42,7 @@ class SupplierRepository
 
     public function all(): Collection
     {
-        return $this->model->active()->orderBy('name')->get(['id', 'name', 'company_name']);
+        return $this->model->where('is_active', true)->orderBy('name')->get(['id', 'name', 'business_name']);
     }
 
     public function create(array $data): Supplier

@@ -1,12 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\API\user;
+namespace App\Http\Controllers\API\User;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\API\user\ReviewResource;
-use App\Models\Booking;
-use App\Models\Review;
-use App\Models\User;
 use App\Traits\apiresponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -111,10 +107,10 @@ class ReviewController extends Controller
         ]);
 
         return $this->success([
-            'data' => ReviewResource::make($review->load([
+            'data' => $review->load([
                 'teachingSubjects.subject',
                 'teachingSubjects.user'
-            ]))
+            ])
         ], 'Review updated successfully', 200);
     }
 

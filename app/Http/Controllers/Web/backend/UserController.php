@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
 use App\Helper\Helper;
 use App\Http\Controllers\Controller;
@@ -28,14 +28,14 @@ class UserController extends Controller
 
     public function __construct()
     {
-        $this->middleware(['auth', 'role_or_permission:admin|super_admin']);
+        $this->middleware(['auth', 'role_or_permission:admin|superadmin']);
         $this->userServiceObj = new UserService();
     }
 
     public function index(Request $request)
     {
         // Authorize: Only admin can view users
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403, 'You do not have permission to view users');
         }
 
@@ -56,7 +56,7 @@ class UserController extends Controller
                     $checked = $data->status == 'active' ? 'checked' : '';
 
                     return '
-                <div class="form-check form-switch">
+                 <div class="form-check form-switch form-check-success">
                     <input class="form-check-input"
                         type="checkbox"
                         ' . $checked . '
@@ -77,19 +77,29 @@ class UserController extends Controller
                     $view = route('admin.user.show', $data->id);
 
                     return '
-                <a href="' . $edit . '" class="btn btn-sm btn-info">
-                    <i class="ri-edit-line"></i>
-                </a>
+<div class="d-flex gap-2">
 
-                <a href="' . $view . '" class="btn btn-sm btn-primary">
-                    <i class="ri-eye-line"></i>
-                </a>
+    <a href="' . $edit . '"
+       class="btn btn-sm btn-soft-info btn-icon"
+       title="Edit">
+        <i class="ri-edit-2-line"></i>
+    </a>
 
-                <button onclick="deleteUser(' . $data->id . ')"
-                class="btn btn-sm btn-danger">
-                    <i class="ri-delete-bin-line"></i>
-                </button>
-                ';
+    <a href="' . $view . '"
+       class="btn btn-sm btn-soft-primary btn-icon"
+       title="View">
+        <i class="ri-eye-line"></i>
+    </a>
+
+    <button type="button"
+            onclick="deleteCms(' . $data->id . ')"
+            class="btn btn-sm btn-soft-danger btn-icon"
+            title="Delete">
+        <i class="ri-delete-bin-line"></i>
+    </button>
+
+</div>
+';
                 })
 
                 ->rawColumns(['status', 'action', 'bulk_check'])
@@ -100,7 +110,7 @@ class UserController extends Controller
     public function create()
     {
         // Authorize: Only admin can create users
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403, 'You do not have permission to create users');
         }
 
@@ -112,7 +122,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         // Authorize: Only admin can store users
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403, 'You do not have permission to create users');
         }
 
@@ -143,7 +153,7 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403, 'You do not have permission to edit users');
         }
         $user = User::findOrFail($id);
@@ -158,7 +168,7 @@ class UserController extends Controller
 
     public function update(Request $request)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403, 'You do not have permission to update users');
         }
         $user = User::findOrFail($request->id);
@@ -197,7 +207,7 @@ class UserController extends Controller
 
     public function changeStatus($id)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403, 'You do not have permission to change users status');
         }
         $user = User::findOrFail($id);
@@ -220,7 +230,7 @@ class UserController extends Controller
 
     public function destroy(Request $request)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403, 'You do not have permission to delelte users');
         }
         if (!Hash::check($request->password, Auth::user()->password)) {

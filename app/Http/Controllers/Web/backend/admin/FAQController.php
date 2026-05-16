@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\admin;
+namespace App\Http\Controllers\Web\Backend\Admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -121,6 +121,35 @@ class FAQController extends Controller
         } else {
             return back()->with('error', 'Try Again!');
         }
+    }
+
+    public function priority(Request $request)
+    {
+        $this->authorizeAdmin('You do not have permission to update FAQ priorities');
+
+        foreach ($request->input('priorities', []) as $id => $priority) {
+            FAQ::whereKey($id)->update(['priority' => (int) $priority]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Priority updated',
+        ]);
+    }
+
+    public function changeStatus($id)
+    {
+        $this->authorizeAdmin('You do not have permission to update FAQ status');
+
+        $faq = FAQ::findOrFail($id);
+        $faq->update([
+            'status' => $faq->status === 'active' ? 'inactive' : 'active',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status Updated'
+        ]);
     }
 
     public function status(Request $request)

@@ -1,102 +1,147 @@
 {{-- File: resources/views/components/pos/payment-modal.blade.php --}}
 
-<div x-show="paymentModal"
-    x-transition:enter="transition ease-out duration-200"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-    @keydown.escape.window="paymentModal = false">
+<div
+    x-show="paymentModal"
+    x-transition
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4"
+    @keydown.escape.window="paymentModal = false"
+>
 
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4"
+    <div
         @click.stop
-        x-transition:enter="transition ease-out duration-200"
+        class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden"
+        x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95"
-        x-transition:enter-end="opacity-100 scale-100">
+        x-transition:enter-end="opacity-100 scale-100"
+    >
 
         {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b">
-            <h2 class="text-lg font-bold text-gray-900">
-                <span x-text="paymentMethod === 'cash' ? '💵 Cash Payment'
-                             : paymentMethod === 'card' ? '💳 Card Payment'
-                             : '⚡ Split Payment'">
-                </span>
-            </h2>
-            <button @click="paymentModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+        <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-slate-900">
+                    <span x-text="
+                        paymentMethod === 'cash' ? 'Cash Payment' :
+                        paymentMethod === 'card' ? 'Card Payment' :
+                        'Split Payment'
+                    "></span>
+                </h2>
+                <p class="text-sm text-slate-400">Complete transaction securely</p>
+            </div>
+
+            <button
+                @click="paymentModal = false"
+                class="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500"
+            >
+                <i class="ri-close-line text-xl"></i>
+            </button>
         </div>
 
         {{-- Body --}}
-        <div class="px-6 py-5 space-y-4">
+        <div class="p-6 space-y-5">
 
-            {{-- Total due --}}
-            <div class="bg-blue-50 rounded-xl p-4 text-center">
-                <p class="text-sm text-blue-600">Amount Due</p>
-                <p class="text-4xl font-bold text-blue-700" x-text="formatMoney(cart.grand_total)"></p>
+            {{-- Amount Due --}}
+            <div class="rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 text-center">
+                <p class="text-sm opacity-80">Amount Due</p>
+                <p class="text-4xl font-extrabold mt-1" x-text="formatMoney(cart.grand_total)"></p>
             </div>
 
-            {{-- Cash payment: tendered amount + change --}}
-            <div x-show="paymentMethod === 'cash'" class="space-y-3">
+            {{-- CASH --}}
+            <div x-show="paymentMethod === 'cash'" class="space-y-4">
+
                 <div>
-                    <label class="text-sm font-medium text-gray-700">Amount Tendered</label>
-                    <input type="number"
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Amount Tendered
+                    </label>
+
+                    <input
+                        type="number"
                         x-model="amountTendered"
                         @input="calculateChange()"
-                        class="w-full mt-1 px-4 py-3 text-xl text-center border-2 border-gray-300
-                                  rounded-xl focus:border-blue-500 focus:outline-none font-bold"
+                        class="w-full px-4 py-4 text-center text-2xl font-bold border-2 border-slate-300 rounded-2xl focus:border-blue-500 focus:outline-none"
                         step="0.01"
                         min="0"
-                        autofocus>
+                    >
                 </div>
 
-                {{-- Quick cash buttons --}}
+                {{-- Quick Cash --}}
                 <div class="grid grid-cols-4 gap-2">
                     <template x-for="amount in quickCashAmounts">
-                        <button @click="amountTendered = amount; calculateChange()"
-                            class="py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 font-medium"
-                            x-text="formatMoney(amount)">
-                        </button>
+                        <button
+                            @click="amountTendered = amount; calculateChange()"
+                            class="py-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-sm font-semibold"
+                            x-text="formatMoney(amount)"
+                        ></button>
                     </template>
                 </div>
 
                 {{-- Change --}}
-                <div class="flex justify-between items-center bg-green-50 rounded-xl px-4 py-3"
-                    x-show="changeAmount >= 0">
-                    <span class="text-sm font-medium text-green-700">Change</span>
+                <div
+                    x-show="changeAmount >= 0"
+                    class="rounded-2xl bg-green-50 border border-green-200 px-5 py-4 flex justify-between items-center"
+                >
+                    <span class="text-green-700 font-semibold">Change</span>
                     <span class="text-2xl font-bold text-green-700"
-                        x-text="formatMoney(changeAmount)"></span>
+                          x-text="formatMoney(changeAmount)">
+                    </span>
                 </div>
+
             </div>
 
-            {{-- Card payment --}}
-            <div x-show="paymentMethod === 'card'" class="space-y-3">
-                <div class="bg-gray-50 rounded-xl p-4 text-center text-gray-600 text-sm">
-                    <p class="text-xl mb-1">💳</p>
-                    Present card to terminal for <strong x-text="formatMoney(cart.grand_total)"></strong>
+            {{-- CARD --}}
+            <div x-show="paymentMethod === 'card'" class="space-y-4">
+
+                <div class="rounded-2xl bg-slate-50 p-5 text-center border border-slate-200">
+                    <i class="ri-bank-card-line text-4xl text-blue-500"></i>
+                    <p class="mt-2 text-sm text-slate-600">
+                        Charge customer card for
+                    </p>
+                    <p class="text-xl font-bold text-slate-900"
+                       x-text="formatMoney(cart.grand_total)">
+                    </p>
                 </div>
+
                 <div>
-                    <label class="text-sm font-medium text-gray-700">Transaction Reference (optional)</label>
-                    <input type="text"
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Transaction Reference
+                    </label>
+
+                    <input
+                        type="text"
                         x-model="cardReference"
-                        placeholder="Auth code / reference"
-                        class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        placeholder="Authorization code / reference"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
                 </div>
+
             </div>
 
         </div>
 
         {{-- Footer --}}
         <div class="px-6 pb-6 flex gap-3">
-            <button @click="paymentModal = false"
-                class="flex-1 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50">
+
+            <button
+                @click="paymentModal = false"
+                class="flex-1 py-4 rounded-2xl border border-slate-300 font-semibold text-slate-700 hover:bg-slate-50"
+            >
                 Cancel
             </button>
-            <button @click="processPayment()"
+
+            <button
+                @click="processPayment()"
                 :disabled="processingPayment || (paymentMethod === 'cash' && amountTendered < cart.grand_total)"
-                class="flex-2 flex-1 py-3 bg-green-600 text-white rounded-xl font-bold
-                           hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed
-                           flex items-center justify-center gap-2">
-                <span x-show="processingPayment" class="animate-spin">⚙️</span>
-                <span x-show="!processingPayment">✅ Complete Sale</span>
+                class="flex-1 py-4 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold
+                       disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+                <span x-show="processingPayment" class="animate-spin">
+                    <i class="ri-loader-4-line"></i>
+                </span>
+
+                <span x-show="!processingPayment">
+                    Complete Sale
+                </span>
             </button>
+
         </div>
     </div>
 </div>

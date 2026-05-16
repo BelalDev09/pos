@@ -1,36 +1,43 @@
 @extends('backend.app')
 
-@section('title', 'Create Permissions')
+@section('title', 'Create Permission')
 
 @section('content')
-    {{-- <main class="app-content content"> --}}
-    <h2 class="section-title">Create Permissions</h2>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="text-end">
-                            <a href="javascript:history.back()" class="btn btn-danger float-end">Back</a>
-                        </h4>
-                    </div>
-                    <div class="card-body">
-                        <form action="{{ route('admin.permissions.store') }}" method="post">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Premissions Name</label>
-                                <input type="text" class="form-control" id="name" name="name">
-                            </div>
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-success">Submit</button>
 
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+{{-- HEADER --}}
+<div class="row align-items-center mb-3">
+    <div class="col">
+        <h5 class="mb-0">Create Permission</h5>
     </div>
-    {{-- </main> --}}
+
+    <div class="col-auto">
+        <a href="javascript:history.back()" class="btn btn-danger btn-sm">
+            <i class="ri-arrow-left-line me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+{{-- CARD --}}
+<div class="card shadow-sm">
+    <div class="card-body">
+
+        <form action="{{ route('admin.permissions.store') }}" method="post">
+            @csrf
+
+            <div class="mb-3">
+                <label class="form-label">Permission Name</label>
+                <input type="text" class="form-control" name="name" placeholder="Enter permission name">
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-success btn-sm">
+                    <i class="ri-check-line me-1"></i> Submit
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
 @endsection

@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CustomerCreateRequest;
 use App\Http\Requests\Customer\CustomerUpdateRequest;
 use App\Models\Customer;
-use App\Models\Restaurant;
 use App\Traits\AuthorizesRequest;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -35,9 +34,10 @@ class CustomerController extends Controller
             return DataTables::of($customers)
                 // ->addColumn('restaurant', fn($c) => $c->restaurant?->name ?? '-')
                 ->addColumn('action', function ($c) {
-                    $edit = '<a href="' . route('customer.edit', $c->id) . '" class="btn btn-sm btn-primary">Edit</a>';
-                    $delete = '<button data-id="' . $c->id . '" class="btn btn-sm btn-danger delete-customer">Delete</button>';
-                    return $edit . ' ' . $delete;
+                    $show = '<a href="' . route('admin.customer.show', $c->id) . '" class="btn btn-sm btn-soft-info me-1">View</a>';
+                    $edit = '<a href="' . route('admin.customer.edit', $c->id) . '" class="btn btn-sm btn-soft-primary me-1">Edit</a>';
+                    $delete = '<button data-id="' . $c->id . '" class="btn btn-sm btn-soft-danger delete-customer">Delete</button>';
+                    return $show . $edit . $delete;
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -52,9 +52,7 @@ class CustomerController extends Controller
         // Authorize: Only admin can create customers
         $this->authorizeAdmin('You do not have permission to create customers');
 
-        // $restaurants = Restaurant::all();
-        $customers = Customer::all();
-        return view('backend.layout.customers.form', compact('customers'));
+        return view('backend.layout.customers.form');
     }
 
     // Store new customer
@@ -73,11 +71,14 @@ class CustomerController extends Controller
             $customer->loyalty_points = $request->loyalty_points ?? 0;
             $customer->save();
 
-            flash()->success('Customer created successfully.');
-            return redirect()->route('customer.index');
+            return redirect()
+                ->route('admin.customer.index')
+                ->with('success', 'Customer created successfully.');
         } catch (Exception $e) {
-            flash()->error('Something went wrong! Please try again.');
-            return redirect()->back()->withInput();
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong! Please try again.');
         }
     }
 
@@ -88,8 +89,16 @@ class CustomerController extends Controller
         $this->authorizeAdmin('You do not have permission to edit customers');
 
         $customer = $this->customer->findOrFail($id);
-        // $restaurants = Restaurant::all();
-        return view('backend.layout.customers.form', compact('customer', 'restaurants'));
+        return view('backend.layout.customers.form', compact('customer'));
+    }
+
+    public function show($id)
+    {
+        $this->authorizeAdmin('You do not have permission to view customer details');
+
+        $customer = $this->customer->findOrFail($id);
+
+        return view('backend.layout.customers.show', compact('customer'));
     }
 
     // Update customer
@@ -108,11 +117,14 @@ class CustomerController extends Controller
             $customer->loyalty_points = $request->loyalty_points ?? 0;
             $customer->save();
 
-            flash()->success('Customer updated successfully.');
-            return redirect()->route('customer.index');
+            return redirect()
+                ->route('admin.customer.index')
+                ->with('success', 'Customer updated successfully.');
         } catch (Exception $e) {
-            flash()->error('Something went wrong! Please try again.');
-            return redirect()->back()->withInput();
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong! Please try again.');
         }
     }
 

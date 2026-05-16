@@ -5,7 +5,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>@yield('title', 'Dashboard')</title>
+    {{-- <title>@yield('title', 'Dashboard')</title> --}}
+    <title>@yield('title', $system_setting?->system_title ?? 'Dashboard')</title>
     {{-- header --}}
     @include('backend.partials.header')
 
@@ -53,7 +54,7 @@
             <div class="spinner-border text-primary avatar-sm"></div>
         </div>
     </div>
-    {{--  scripts --}}
+    {{-- scripts --}}
     @include('backend.partials.scripts')
     <!-- Page Specific Scripts -->
     @stack('scripts')

@@ -17,12 +17,12 @@ class PosController extends Controller
     {
         $user = Auth::user();
 
-        // ── Stats 
+        // ── Stats
         if ($user && $user->tenant_id) {
             $stats = [
-                'products'   => Product::where('tenant_id', $user->tenant_id)->count(),
+                'products' => Product::where('tenant_id', $user->tenant_id)->count(),
                 'categories' => Category::where('tenant_id', $user->tenant_id)->count(),
-                'customers'  => Customer::where('tenant_id', $user->tenant_id)->count(),
+                'customers' => Customer::where('tenant_id', $user->tenant_id)->count(),
             ];
 
             $recentProducts = Product::where('tenant_id', $user->tenant_id)
@@ -32,9 +32,9 @@ class PosController extends Controller
         } else {
             // Super admin or no tenant — bypass scope
             $stats = [
-                'products'   => Product::withoutGlobalScopes()->count(),
+                'products' => Product::withoutGlobalScopes()->count(),
                 'categories' => Category::withoutGlobalScopes()->count(),
-                'customers'  => Customer::withoutGlobalScopes()->count(),
+                'customers' => Customer::withoutGlobalScopes()->count(),
             ];
 
             $recentProducts = Product::withoutGlobalScopes()
@@ -43,6 +43,8 @@ class PosController extends Controller
                 ->get(['id', 'name', 'created_at']);
         }
 
-        return view('pos.index', compact('stats', 'recentProducts'));
+        $categories = Category::active()->ordered()->get();
+
+        return view('pos.index', compact('stats', 'recentProducts', 'categories'));
     }
 }

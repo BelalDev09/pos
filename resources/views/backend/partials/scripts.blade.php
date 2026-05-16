@@ -7,6 +7,7 @@
 
 <!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Other plugins -->
 <script src="{{ asset('Backend/assets/libs/simplebar/simplebar.min.js') }}"></script>
 <script src="{{ asset('Backend/assets/libs/node-waves/waves.min.js') }}"></script>
@@ -221,31 +222,42 @@
 </script>
 {{-- toster notification --}}
 <script>
-    const Toast = Swal.mixin({
+    const Toast = window.Swal ? Swal.mixin({
         toast: true,
         position: 'top-end',
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
         didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
-    })
+    }) : null;
+
+    const showToast = (icon, title) => {
+        if (Toast) {
+            Toast.fire({
+                icon: icon,
+                title: title,
+            });
+            return;
+        }
+
+        if (title) {
+            window.alert(title);
+        }
+    };
 
     @if (session('success'))
-        Toast.fire({
-            icon: 'success',
-            title: '{{ session('success') }}',
-        })
+        showToast('success', @json(session('success')));
     @endif
 
     @if (session('error'))
-        alert('yo');
-        Toast.fire({
-            icon: 'error',
-            title: '{{ session('error') }}',
-        })
+        showToast('error', @json(session('error')));
+    @endif
+
+    @if (session('warning'))
+        showToast('warning', @json(session('warning')));
     @endif
 
     $(".del").click(function() {

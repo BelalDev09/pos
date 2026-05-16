@@ -21,11 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
         then: function () {
-            Route::middleware(['web', 'admin', 'auth'])
+            Route::middleware(['web', \App\Http\Middleware\IdentifyTenant::class])
                 ->prefix('admin')
                 ->group(base_path('routes/backend.php'));
-
-            Route::middleware(['api', 'jwt.verify']);
 
             Route::prefix('api')
                 ->middleware(['api'])
@@ -37,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => AdminMiddleware::class,
             'role_or_admin' => \App\Http\Middleware\RoleOrAdmin::class,
             'jwt.verify' => JWTMiddleware::class,
+            'tenant' => \App\Http\Middleware\TenantMiddleware::class,
 
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

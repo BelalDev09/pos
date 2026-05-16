@@ -1,200 +1,198 @@
 @extends('backend.app')
 
 @section('title', 'My Profile')
-
-@push('style')
-    <style>
-        .nav-tabs.nav-justified {
-            width: 400px;
-        }
-    </style>
-@endpush
-
 @section('content')
-    <!--app-content open-->
-    {{-- <div class="app-content content"> --}}
-    <div class="side-app">
-        <div class="main-container container-fluid">
-            <div class="row" id="user-profile">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-xl-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="profile-img-main rounded-circle overflow-hidden">
-                                            <img src="{{ asset(Auth::user()->avatar) }}" alt="Profile Picture"
-                                                class="img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
-                                        </div>
-                                        <div class="ms-4">
-                                            <h4 class="mb-1">{{ Auth::user()->name ?? 'N/A' }}</h4>
-                                            <p class="text-muted mb-2">{{ Auth::user()->email ?? 'N/A' }}</p>
-                                            <button class="btn btn-primary btn-sm" id="uploadImageBtn">
-                                                <i class="fa fa-edit me-2"></i>Update Profile
-                                            </button>
-                                            <input type="file" name="avatar" id="profile_picture_input" hidden>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+@php
+$activeTab = session('type') === 'password' ? 'password' : 'profile';
+@endphp
 
-                        <div class="border-top">
-                            <ul class="nav nav-tabs nav-justified">
-                                <li class="nav-item">
-                                    <a class="nav-link {{ session('type') ? (session('type') == 'profile' ? 'active' : '') : 'active' }}"
-                                        data-bs-toggle="tab" href="#editProfile">Edit Profile</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ session('type') ? (session('type') == 'password' ? 'active' : '') : '' }}"
-                                        data-bs-toggle="tab" href="#updatePassword">Update Password</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+<div class="container-fluid">
 
-                    <div class="tab-content mt-4">
-                        <div class="tab-pane fade {{ session('type') ? (session('type') == 'profile' ? 'show active' : '') : 'show active' }}"
-                            id="editProfile">
-                            <div class="card">
-                                <div class="card-body">
-                                    <form method="post" action="{{ route('admin.profile.update') }}">
-                                        @csrf
-                                        <div class="mb-3">
-                                            <label for="name" class="form-label">Name</label>
-                                            <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                                name="name" id="name" value="{{ Auth::user()->name }}"
-                                                placeholder="Enter your name">
-                                            @error('name')
-                                                <div class="text-danger">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="firstname" class="form-label">Email</label>
-                                            <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                                name="email" id="firstname" value="{{ Auth::user()->email }}"
-                                                placeholder="Enter your email">
-                                            @error('email')
-                                                <div class="text-danger">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+    <!-- Header Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center flex-column flex-md-row">
 
-
-
-                                        <button type="submit" class="btn btn-primary">Update</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="tab-pane fade {{ session('type') ? (session('type') == 'password' ? 'show active' : '') : '' }}"
-                            id="updatePassword">
-                            <div class="card">
-                                <div class="card-body">
-                                    <form method="post" action="{{ route('admin.profile.update.password') }}">
-                                        @csrf
-                                        <div class="mb-3">
-                                            <label for="old_password" class="form-label">Current Password</label>
-                                            <input type="password"
-                                                class="form-control @error('old_password') is-invalid @enderror"
-                                                name="old_password" id="old_password" placeholder="Enter current password">
-                                            @error('old_password')
-                                                <div class="text-danger">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="row justify-content-center align-items-center g-2">
-                                            <div class="mb-3 col-md-6">
-                                                <label for="password" class="form-label">New Password</label>
-                                                <input type="password"
-                                                    class="form-control @error('password') is-invalid @enderror"
-                                                    name="password" id="password" placeholder="Enter new password">
-                                                @error('password')
-                                                    <div class="text-danger">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="mb-3 col-md-6">
-                                                <label for="password_confirmation" class="form-label">Confirm
-                                                    Password</label>
-                                                <input type="password"
-                                                    class="form-control @error('password_confirmation') is-invalid @enderror"
-                                                    name="password_confirmation" id="password_confirmation"
-                                                    placeholder="Confirm new password">
-                                                @error('password_confirmation')
-                                                    <div class="text-danger">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-
-                                        <button type="submit" class="btn btn-primary">Update</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="me-md-4 mb-3 mb-md-0 profile-img-main">
+                    <img src="{{ asset(Auth::user()->avatar) }}" class="rounded-circle border"
+                        style="width: 90px; height: 90px; object-fit: cover;">
                 </div>
+
+                <button class="btn btn-soft-primary btn-sm" id="uploadImageBtn">
+                    <i class="ri-edit-2-line"></i> Update Profile Picture
+                </button>
+
+                <input type="file" id="profile_picture_input" name="avatar" hidden>
             </div>
+
         </div>
     </div>
-    {{-- </div> --}}
+
+    <!-- Tabs Card -->
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-white border-bottom-0">
+            <ul class="nav nav-tabs nav-tabs-custom nav-justified">
+
+                <li class="nav-item">
+                    <a class="nav-link {{ $activeTab === 'profile' ? 'active' : '' }}" data-bs-toggle="tab"
+                        href="#editProfile">
+                        Edit Profile
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ $activeTab === 'password' ? 'active' : '' }}" data-bs-toggle="tab"
+                        href="#updatePassword">
+                        Change Password
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+
+        <div class="card-body">
+
+            <div class="tab-content">
+
+                <!-- PROFILE UPDATE -->
+                <div class="tab-pane fade {{ $activeTab === 'profile' ? 'show active' : '' }}" id="editProfile">
+
+                    <form method="POST" action="{{ route('admin.profile.update') }}">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control"
+                                value="{{ old('name', Auth::user()->name) }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control"
+                                value="{{ old('email', Auth::user()->email) }}">
+                        </div>
+
+                        <button class="btn btn-primary">
+                            Update Profile
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <!-- PASSWORD UPDATE -->
+                <div class="tab-pane fade {{ $activeTab === 'password' ? 'show active' : '' }}" id="updatePassword">
+
+                    <form method="POST" action="{{ route('admin.profile.update.password') }}">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" name="old_password" class="form-control">
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">New Password</label>
+                                <input type="password" name="password" class="form-control">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" name="password_confirmation" class="form-control">
+                            </div>
+
+                        </div>
+
+                        <button class="btn btn-primary">
+                            Update Password
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
 @endsection
 
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-            $('#uploadImageBtn').click(function() {
-                $('#profile_picture_input').click();
-            });
+<script>
+    $(function() {
+        function getErrorMessage(xhr, fallback) {
+            return xhr?.responseJSON?.message ||
+                xhr?.responseJSON?.errors?.avatar?.[0] ||
+                fallback;
+        }
 
-            $('#profile_picture_input').change(function() {
-                let formData = new FormData();
-                formData.append('profile_picture', $(this)[0].files[0]);
-                formData.append('_token', '{{ csrf_token() }}');
+        function setUploadButtonLoading(isLoading) {
+            $('#uploadImageBtn')
+                .prop('disabled', isLoading)
+                .html(isLoading ?
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...' :
+                    '<i class="ri-edit-2-line"></i> Update Profile Picture');
+        }
 
-                $.ajax({
-                    url: "{{ route('admin.profile.update.profile.picture') }}",
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        if (response.success) {
-                            $('.profile-img-main img').attr('src', response.image_url);
-                            new Notyf().success('Profile picture updated successfully.');
-                        } else {
-                            new Notyf().error(response.message);
-                        }
-                    },
-                    error: function() {
-                        new Notyf().error('An error occurred.');
-                    }
-                });
-            });
+        $('#uploadImageBtn').on('click', function() {
+            $('#profile_picture_input').trigger('click');
         });
-    </script>
 
-    <script>
-        $('#username').on('keyup', function() {
-            let input = $('#username').val();
+        $('#profile_picture_input').on('change', function() {
+
+            let file = this.files[0];
+            if (!file) return;
+
+            let formData = new FormData();
+            formData.append('avatar', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
             $.ajax({
-                url: "{{ route('admin.checkusername') }}",
-                type: 'GET',
-                data: {
-                    input: input,
-                    _token: "{{ csrf_token() }}"
+                url: "{{ route('admin.profile.update.profile.picture') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+
+                beforeSend: function() {
+                    setUploadButtonLoading(true);
                 },
-                success: function(response) {
-                    if (response.exists) {
-                        $('#usernameexists').show();
+
+                success: function(res) {
+
+                    setUploadButtonLoading(false);
+
+                    if (res.success) {
+
+                        $('.profile-img-main img').attr(
+                            'src',
+                            res.image_url + '?t=' + new Date().getTime()
+                        );
+
+                        showToast('success', res.message);
+
                     } else {
-                        $('#usernameexists').hide();
+                        showToast('error', res.message || 'Profile picture was not updated.');
                     }
                 },
-                error: function() {
-                    new Notyf().error('An error occurred.');
+
+                error: function(xhr) {
+                    setUploadButtonLoading(false);
+                    showToast('error', getErrorMessage(xhr, 'Profile picture was not updated.'));
+                },
+
+                complete: function() {
+                    $('#profile_picture_input').val('');
                 }
             });
+
         });
-    </script>
+
+    });
+</script>
 @endpush

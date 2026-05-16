@@ -1,14 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\backend\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Web\Backend\DashboardController;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Public
  */
-
-Route::get('/', fn() => view('welcome'));
+Route::get('/', fn () => view('welcome'));
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
@@ -17,14 +16,13 @@ Route::get('/', fn() => view('welcome'));
 /**
  * Dashboard
  */
-
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-});
+/**
+ * Public
+ */
+Route::get('/', fn () => view('welcome'));
 
 /**
  * Cashier
  */
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Web\Purchases;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Purchase\StorePurchaseOrderRequest;
 use App\Http\Requests\Purchase\ReceiveGoodsRequest;
+use App\Http\Requests\Purchase\StorePurchaseOrderRequest;
 use App\Models\Store;
-use App\Repositories\SupplierRepository;
 use App\Repositories\ProductRepository;
+use App\Repositories\SupplierRepository;
 use App\Services\Purchase\PurchaseOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,8 +18,8 @@ class PurchaseOrderController extends Controller
 {
     public function __construct(
         private readonly PurchaseOrderService $poService,
-        private readonly SupplierRepository   $supplierRepository,
-        private readonly ProductRepository    $productRepository
+        private readonly SupplierRepository $supplierRepository,
+        private readonly ProductRepository $productRepository
     ) {}
 
     public function index(Request $request): View
@@ -31,7 +31,7 @@ class PurchaseOrderController extends Controller
             'supplier_id',
         ]));
 
-        $stores    = Store::active()->get(['id', 'name']);
+        $stores = Store::active()->get(['id', 'name']);
         $suppliers = $this->supplierRepository->all();
 
         return view('purchases.index', compact('purchaseOrders', 'stores', 'suppliers'));
@@ -40,8 +40,8 @@ class PurchaseOrderController extends Controller
     public function create(): View
     {
         $suppliers = $this->supplierRepository->all();
-        $stores    = Store::active()->get(['id', 'name']);
-        $products  = $this->productRepository->paginate(100, ['is_active' => true]);
+        $stores = Store::active()->get(['id', 'name']);
+        $products = $this->productRepository->paginate(100, ['is_active' => true]);
 
         return view('purchases.create', compact('suppliers', 'stores', 'products'));
     }
@@ -58,26 +58,27 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "Purchase order {$po->po_number} created.",
-                'data'    => $po,
+                'data' => $po,
             ], 201);
         }
 
         return redirect()
-            ->route('purchases.show', $po->id)
+            ->route('admin.purchases.show', $po->id)
             ->with('success', "Purchase order {$po->po_number} created.");
     }
 
     public function show(int $id): View
     {
         $po = $this->poService->findById($id);
+
         return view('purchases.show', compact('po'));
     }
 
     public function edit(int $id): View
     {
-        $po        = $this->poService->findById($id);
+        $po = $this->poService->findById($id);
         $suppliers = $this->supplierRepository->all();
-        $stores    = Store::active()->get(['id', 'name']);
+        $stores = Store::active()->get(['id', 'name']);
 
         return view('purchases.edit', compact('po', 'suppliers', 'stores'));
     }
@@ -90,12 +91,12 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Purchase order updated.',
-                'data'    => $po,
+                'data' => $po,
             ]);
         }
 
         return redirect()
-            ->route('purchases.show', $id)
+            ->route('admin.purchases.show', $id)
             ->with('success', 'Purchase order updated.');
     }
 
@@ -108,7 +109,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "PO {$po->po_number} approved.",
-                'data'    => $po,
+                'data' => $po,
             ]);
         }
 
@@ -127,7 +128,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Goods received and inventory updated.',
-                'data'    => $po,
+                'data' => $po,
             ]);
         }
 
@@ -143,7 +144,7 @@ class PurchaseOrderController extends Controller
         }
 
         return redirect()
-            ->route('purchases.index')
+            ->route('admin.purchases.index')
             ->with('success', 'Purchase order deleted.');
     }
 }

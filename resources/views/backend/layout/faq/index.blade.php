@@ -1,233 +1,216 @@
 @extends('backend.app')
 
-@section('title', 'FAQ Page')
+@section('title', 'FAQ List')
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+<style>
+    .dropify-wrapper {
+        height: auto !important;
+    }
+</style>
+<style>
+    .swal2-show-custom {
+        animation: slideInRight 0.35s ease-out;
+    }
 
-@push('style')
-    <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" />
-    <style>
-        .dropify-wrapper {
-            width: 160px;
+    .swal2-hide-custom {
+        animation: fadeOut 0.2s ease-in;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
         }
 
-        #data-table th,
-        #data-table td {
-            text-align: center !important;
-            vertical-align: middle !important;
+        to {
+            transform: translateX(0);
+            opacity: 1;
         }
-    </style>
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+        }
+    }
+</style>
 @endpush
 @section('content')
-    <main class="app-content content">
-        <div class="row">
-            <div class="col-lg-5">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="m-0">FAQ <span id="faqtitle">Create</span></h4>
-                    </div>
-                    <div class="card-body">
-                        <form id="createfaq" action="{{ route('faq.store') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="row mb-2">
-                                        <label for="inputEmail3" class="col-3 col-form-label">Question ?</label>
-                                        <div class="col-9">
-                                            <textarea name="que" class="form-control" id="" placeholder="question..?" cols="5" rows="2">{{ old('que') }}</textarea>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <label for="inputEmail3" class="col-3 col-form-label">Answer</label>
-                                        <div class="col-9">
-                                            <textarea name="ans" class="ck-editor form-control @error('ans') is-invalid @enderror">{{ old('ans') }}</textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-12">
-                                    <div class="text-end">
-                                        <button type="submit" class="btn btn-sm btn-primary">Create</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
 
-                        <form style="display: none;" id="editfaq" action="{{ route('faq.update') }}" method="POST"
-                            enctype="multipart/form-data">
-                            @csrf
-                            <input type="hidden" name="id" value="">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="row mb-2">
-                                        <label for="inputEmail3" class="col-3 col-form-label">Question ?</label>
-                                        <div class="col-9">
-                                            <textarea name="que" class="form-control" id="" placeholder="question..?" cols="5" rows="2">{{ old('que') }}</textarea>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <label for="inputEmail3" class="col-3 col-form-label">Answer</label>
-                                        <div class="col-9">
-                                            <textarea id="ans" name="ans" class="ck-editor form-control @error('ans') is-invalid @enderror">{{ old('ans') }}</textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-12">
-                                    <div class="text-end">
-                                        <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-7">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="m-0">FAQ List</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="accordion" id="accordionExample">
-                            @forelse ($faqs as $key => $item)
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" style="display: flex;">
-                                        <button style="flex: 25; border-radius: 0;"
-                                            class="accordion-button {{ $key == 0 ? '' : 'collapsed' }}" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapse{{ $item->id }}"
-                                            aria-expanded="{{ $key == 0 ? 'true' : 'false' }}"
-                                            aria-controls="collapse{{ $item->id }}">
-                                            <span>{{ $key+1 . "." }}</span>{{ $item->que }}
-                                        </button>
-                                        <button style="flex: 1; border-radius:0;padding: .8rem 1.25rem;"
-                                            onclick="editfaq({{ $item->id }})" type="button" class="btn btn-info"><i
-                                                class="mdi mdi-pencil"></i>
-                                        </button>
-                                        <button style="flex: 1; border-radius:0;padding: .8rem 1.25rem;" type="button"
-                                            name="{{ route('faq.destroy',$item->id) }}" class="btn btn-danger del"><i class="mdi mdi-delete"></i>
-                                        </button>
-                                        <button style="flex: 3; border-radius:0;padding: .8rem 1.25rem;" type="button"
-                                            onclick="statusfaq({{ $item->id }})"
-                                            class="btn btn-{{ $item->status == 'active' ? 'success' : 'secondary' }}">
-                                            {{ $item->status == 'active' ? 'Active' : 'Inactive' }}
-                                        </button>
-                                    </h2>
+{{-- HEADER --}}
+<div class="row align-items-center mb-3">
+    <div class="col">
+        <h5 class="mb-0">FAQ List</h5>
+    </div>
 
-                                    <div id="collapse{{ $item->id }}"
-                                        class="accordion-collapse collapse {{ $key == 0 ? 'show' : '' }}"
-                                        data-bs-parent="#accordionExample">
-                                        <div class="accordion-body">
-                                            {!! $item->ans !!}
-                                        </div>
-                                    </div>
+    <div class="col-auto">
+        <a href="{{ route('admin.faq.create') }}" class="btn btn-success btn-sm">
+            <i class="ri-add-line me-1"></i> Add FAQ
+        </a>
+    </div>
+</div>
 
-                                </div>
-                            @empty
-                                <div class="alert alert-info">
-                                    No Data Found
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
+{{-- CARD --}}
+<div class="card shadow-sm">
+    <div class="card-body">
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-nowrap" id="faqTable" width="100%">
+
+                <thead class="table-light text-center">
+                    <tr>
+                        <th>#</th>
+                        <th>Question</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+
+            </table>
         </div>
-    </main>
+
+    </div>
+</div>
+
 @endsection
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.js"></script>
 
-@push('script')
-    <script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-    <script src="https://cdn.ckeditor.com/ckeditor5/23.0.0/classic/ckeditor.js"></script>
+<script>
+    $(function() {
 
-    <script>
-        let editors = [];
+        $('#faqTable').DataTable({
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            autoWidth: false,
 
-        document.querySelectorAll('.ck-editor').forEach(editorElement => {
-            ClassicEditor
-                .create(editorElement, {
-                    removePlugins: ['CKFinderUploadAdapter', 'CKFinder', 'EasyImage', 'Image', 'ImageCaption',
-                        'ImageStyle', 'ImageToolbar', 'ImageUpload', 'MediaEmbed'
-                    ],
-                    height: '500px'
-                })
-                .then(editor => {
-                    editors.push(editor); // Store the editor instance for later use
-                })
-                .catch(error => {
-                    console.error(error);
-                });
+            ajax: "{{ route('admin.faq.list') }}",
+
+            columns: [{
+                    data: 'DT_RowIndex',
+                    orderable: false,
+                    searchable: false
+                },
+
+                {
+                    data: 'que'
+                },
+
+                {
+                    data: 'status',
+                    orderable: false,
+                    searchable: false,
+                    className: "text-center"
+                },
+
+                {
+                    data: 'action',
+                    orderable: false,
+                    searchable: false,
+                    className: "text-center"
+                },
+            ]
         });
-    </script>
 
+    });
+</script>
+@if (session('success') || session('error') || session('warning') || session('message') || session('info'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
 
-    <script>
-        $(document).ready(function() {
-            $.ajaxSetup({
-                headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-                }
-            });
+        const toastConfig = {
+            success: {
+                background: '#ecfdf5',
+                color: '#065f46',
+                border: '#10b981',
+                iconColor: '#10b981'
+            },
+            error: {
+                background: '#fef2f2',
+                color: '#991b1b',
+                border: '#ef4444',
+                iconColor: '#ef4444'
+            },
+            warning: {
+                background: '#fffbeb',
+                color: '#92400e',
+                border: '#f59e0b',
+                iconColor: '#f59e0b'
+            },
+            info: {
+                background: '#eff6ff',
+                color: '#1e3a8a',
+                border: '#3b82f6',
+                iconColor: '#3b82f6'
+            }
+        };
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            showClass: {
+                popup: 'swal2-show-custom'
+            },
+            hideClass: {
+                popup: 'swal2-hide-custom'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
         });
-    </script>
 
-    <script>
-        function editfaq(id) {
-            $.ajax({
-                url: "{{ route('faq.get') }}",
-                type: "GET",
-                data: {
-                    id: id
-                },
-                success: function(response) {
-                    if (response) {
-                        $('#faqtitle').text('Update');
-                        $('#editfaq').show();
-                        $('#createfaq').hide();
-                        $('#editfaq input[name="id"]').val(response[0].id);
-                        $('#editfaq textarea[name="que"]').val(response[0].que);
+        window.showToast = function(type, message) {
 
-                        const editor = editors[1];
-                        if (editor) {
-                            editor.setData(response[0].ans); // Set content in CKEditor
-                        }
+            const config = toastConfig[type] || toastConfig.info;
 
-                        $('html, body').animate({
-                            scrollTop: 0
-                        }, 'slow');
+            Toast.fire({
+                icon: type,
+                title: message,
+                background: config.background,
+                color: config.color,
+                didOpen: (toast) => {
+                    toast.style.borderLeft = `6px solid ${config.border}`;
+                    toast.style.borderRadius = '10px';
+                    toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.08)';
+
+                    const icon = toast.querySelector('.swal2-icon');
+                    if (icon) {
+                        icon.style.color = config.iconColor;
                     }
-                },
-                error: function(xhr) {
-                    console.log(xhr.responseText);
                 }
             });
-        }
-    </script>
-    <script>
-        function statusfaq(id) {
-            $.ajax({
-                url: "{{ route('faq.status') }}",
-                type: "GET",
-                data: {
-                    id: id
-                },
-                success: function(response) {
-                    if (response.success) {
-                        Toast.fire({
-                            icon: 'success',
-                            title: response.message
-                        });
+        };
 
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        Toast.fire({
-                            icon: 'error',
-                            title: 'Something Went Wrong'
-                        });
-                    }
-                },
-                error: function(xhr) {
-                    console.log(xhr.responseText);
-                }
-            });
-        }
-    </script>
+        // Laravel session auto trigger
+        @if(session('success'))
+        showToast('success', @json(session('success')));
+        @endif
+
+        @if(session('error'))
+        showToast('error', @json(session('error')));
+        @endif
+
+        @if(session('warning'))
+        showToast('warning', @json(session('warning')));
+        @endif
+
+        @if(session('info'))
+        showToast('info', @json(session('info')));
+        @endif
+
+    });
+</script>
+@endif
 @endpush

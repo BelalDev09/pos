@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\API\user;
+namespace App\Http\Controllers\API\User;
 
 use App\Helper\Helper;
 use App\Http\Controllers\Controller;
-use App\Models\Certification;
 use App\Traits\apiresponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

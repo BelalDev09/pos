@@ -1,22 +1,23 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Orders\OrderController;
-use App\Http\Controllers\Web\backend\admin\FAQController;
-use App\Http\Controllers\Web\backend\cashier\CashierDashboardController;
-use App\Http\Controllers\Web\backend\cashier\CashierOrderController;
-use App\Http\Controllers\Web\backend\CategoryController;
-use App\Http\Controllers\Web\backend\CustomerController;
-use App\Http\Controllers\Web\backend\DashboardController;
-use App\Http\Controllers\Web\backend\MenuItemController;
-use App\Http\Controllers\Web\backend\MenuItemIngredientController;
-use App\Http\Controllers\Web\backend\PermissionController;
-use App\Http\Controllers\Web\backend\RestaurantTableController;
-use App\Http\Controllers\Web\backend\RoleController;
-use App\Http\Controllers\Web\backend\SettingController;
-use App\Http\Controllers\Web\backend\settings\DynamicPagesController;
-use App\Http\Controllers\Web\backend\settings\ProfileSettingController;
-use App\Http\Controllers\Web\backend\UserController;
+use App\Http\Controllers\Web\Backend\Admin\FAQController;
+use App\Http\Controllers\Web\Backend\CategoryController;
+use App\Http\Controllers\Web\Backend\CustomerController;
+use App\Http\Controllers\Web\Backend\DashboardController;
+use App\Http\Controllers\Web\Backend\OrderController;
+use App\Http\Controllers\Web\Backend\PermissionController;
+use App\Http\Controllers\Web\Backend\RoleController;
+use App\Http\Controllers\Web\Backend\SettingController;
+use App\Http\Controllers\Web\Backend\Settings\DynamicPagesController;
+use App\Http\Controllers\Web\Backend\Settings\ProfileSettingController;
+use App\Http\Controllers\Web\Backend\UserController;
+use App\Http\Controllers\Web\Inventory\InventoryController;
+use App\Http\Controllers\Web\POS\PosController;
+use App\Http\Controllers\Web\Products\ProductController;
+use App\Http\Controllers\Web\Purchases\PurchaseOrderController;
+use App\Http\Controllers\Web\Reports\ReportController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\Backend\Admin\SupplierController;
 
 // ── Public
 Route::get('/', fn() => view('welcome'));
@@ -77,7 +78,6 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|super_admin'])-
         Route::post('/delete', 'destroy')->name('destroy');
     });
 
-
     // Categories
     Route::prefix('categories')->name('categories.')->group(function () {
         Route::get('/', [CategoryController::class, 'index'])->name('index');
@@ -90,11 +90,40 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|super_admin'])-
         Route::post('/bulk-delete', [CategoryController::class, 'bulkDelete'])->name('bulk-delete');
     });
 
+    // Products
+    Route::prefix('products')->name('products.')->controller(ProductController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{id}', 'show')->name('show');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
+
+    // POS
+    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+
+    // Inventory
+    Route::prefix('inventory')->name('inventory.')->controller(InventoryController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/adjust', 'adjust')->name('adjust');
+        Route::post('/transfer', 'transfer')->name('transfer');
+    });
+
+    // Reports
+    Route::prefix('reports')->name('reports.')->controller(ReportController::class)->group(function () {
+        Route::get('/sales', 'sales')->name('sales');
+        Route::get('/inventory', 'inventory')->name('inventory');
+        Route::get('/profit-loss', 'profitLoss')->name('profit-loss');
+    });
+
     // Orders
     Route::prefix('orders')->name('order.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::get('/create', [OrderController::class, 'create'])->name('create');
         Route::post('/store', [OrderController::class, 'store'])->name('store');
+        Route::get('/view/{id}', [OrderController::class, 'show'])->name('show');
         Route::get('/edit/{id}', [OrderController::class, 'edit'])->name('edit');
         Route::put('/update/{id}', [OrderController::class, 'update'])->name('update');
         Route::delete('/delete/{id}', [OrderController::class, 'destroy'])->name('destroy');
@@ -107,12 +136,34 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|super_admin'])-
         Route::get('/', [CustomerController::class, 'index'])->name('index');
         Route::get('/create', [CustomerController::class, 'create'])->name('create');
         Route::post('/', [CustomerController::class, 'store'])->name('store');
+        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
         Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
         Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
         Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
     });
-
-
+    // Suppliers
+    Route::middleware(['auth', 'tenant'])->prefix('contacts')->name('suppliers.')->group(function () {
+        Route::get('type=supplier',         [SupplierController::class, 'index'])->name('index');
+        Route::get('suppliers/create',      [SupplierController::class, 'create'])->name('create');
+        Route::post('suppliers',            [SupplierController::class, 'store'])->name('store');
+        Route::get('suppliers/{supplier}',  [SupplierController::class, 'show'])->name('show');
+        Route::get('suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('edit');
+        Route::put('suppliers/{supplier}',  [SupplierController::class, 'update'])->name('update');
+        Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
+        Route::patch('suppliers/{supplier}/toggle', [SupplierController::class, 'toggleStatus'])->name('toggle');
+        Route::get('suppliers/export/csv',  [SupplierController::class, 'exportCsv'])->name('export.csv');
+        Route::get('suppliers/export/pdf',  [SupplierController::class, 'exportPdf'])->name('export.pdf');
+    });
+    // Purchases
+    Route::prefix('purchases')->name('purchases.')->controller(PurchaseOrderController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{id}', 'show')->name('show');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
 
     // Dynamic Pages
     Route::prefix('dynamicpages')->name('dynamicpages.')->controller(DynamicPagesController::class)->group(function () {

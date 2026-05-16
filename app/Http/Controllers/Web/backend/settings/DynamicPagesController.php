@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\settings;
+namespace App\Http\Controllers\Web\Backend\Settings;
 
 use App\Helper\Helper;
 use App\Models\DynamicPage;
@@ -20,7 +20,7 @@ class DynamicPagesController extends Controller
         $this->authorizeAdmin('You do not have permission to view dynamic pages');
 
         if ($request->ajax()) {
-            $data = DynamicPage::latest()->get();
+            $data = DynamicPage::latest();
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -33,21 +33,50 @@ class DynamicPagesController extends Controller
                                 <label class="form-check-label" for="checkbox-' . $data->id . '"></label>
                             </div>';
                 })
+                ->addColumn('row_id', function ($data) {
+                    return 'row-' . $data->id;
+                })
                 ->editColumn('page_content', function ($data) {
                     return Str::limit(strip_tags($data->page_content), 50);
                 })
                 ->editColumn('status', function ($data) {
-                    return '<div class="form-check form-switch mb-2"><input type="checkbox" class="form-check-input"
-                            onclick="changeStatus(event,' . $data->id . ')"
-                            ' . ($data->status == "active" ? "checked" : "") . '></div>';
+
+                    $checked = $data->status == "active" ? "checked" : "";
+
+                    return '
+            <div class="form-check form-switch form-check-success">
+
+            <input class="form-check-input status-toggle"
+                   type="checkbox"
+                   role="switch"
+                   data-id="' . $data->id . '"
+                   ' . $checked . '>
+
+        </div>
+    ';
                 })
                 ->addColumn('action', function ($data) {
-                    return '<a href="' . route('dynamicpages.edit', $data->id) . '" class="btn btn-sm btn-primary">
-                                <i class="fa-solid fa-pen"></i>
-                            </a>
-                            <button type="button" onclick="showDeleteAlert(' . $data->id . ')" class="btn btn-sm btn-danger">
-                                <i class="fa-regular fa-trash-can"></i>
-                            </button>';
+
+                    $edit = route('admin.dynamicpages.edit', $data->id);
+
+                    return '
+<div class="d-flex gap-2">
+
+    <a href="' . $edit . '"
+       class="btn btn-sm btn-soft-info btn-icon"
+       title="Edit">
+        <i class="ri-edit-2-line"></i>
+    </a>
+
+<button type="button"
+        class="btn btn-sm btn-soft-danger btn-icon deleteBtn"
+        data-id="' . $data->id . '"
+        title="Delete">
+    <i class="ri-delete-bin-line"></i>
+</button>
+
+</div>
+';
                 })
                 ->rawColumns(['bulk_check', 'status', 'action'])
                 ->make(true);
@@ -71,21 +100,31 @@ class DynamicPagesController extends Controller
         $request->validate([
             'page_title'   => 'required|max:255|string',
             'page_content' => 'required',
+        ], [
+            'page_title.required' => 'The page title field is required.',
+            'page_title.max'      => 'The page title may not be greater than 255 characters.',
+            'page_title.string'   => 'The page title must be a valid string.',
+
+            'page_content.required' => 'The page content field is required.',
         ]);
 
         try {
             $page = new DynamicPage();
             $page->page_title = $request->page_title;
             $page->page_content = $request->page_content;
-            $page->page_slug = Str::slug($request->page_title);
+            $slug = Str::slug($request->page_title);
+            $count = DynamicPage::where('page_slug', 'like', $slug . '%')->count();
+
+            $page->page_slug = $count ? $slug . '-' . $count : $slug;
             $page->status = 'active';
             $page->save();
 
-            flash()->success('Page created successfully.');
-            return redirect()->route('dynamicpages.index');
+            return redirect()->route('admin.dynamicpages.index')
+                ->with('success', 'Page created successfully.');
         } catch (\Exception $e) {
-            flash()->error('Something went wrong! Please try again.');
-            return redirect()->back()->withInput();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Something went wrong! Please try again.');
         }
     }
 
@@ -107,21 +146,27 @@ class DynamicPagesController extends Controller
         $this->authorizeAdmin('You do not have permission to update dynamic pages');
 
         $request->validate([
-
-            'page_title' => 'required|max:255|string',
+            'page_title'   => 'required|max:255|string',
             'page_content' => 'required',
+        ], [
+            'page_title.required' => 'The page title field is required.',
+            'page_title.max'      => 'The page title may not be greater than 255 characters.',
+            'page_title.string'   => 'The page title must be a valid string.',
 
+            'page_content.required' => 'The page content field is required.',
         ]);
 
         $page = DynamicPage::findOrFail($id);
         $page->page_title = $request->page_title;
         $page->page_content = $request->page_content;
-        $page->page_slug = Str::slug($request->page_title);
+        $slug = Str::slug($request->page_title);
+        $count = DynamicPage::where('page_slug', 'like', $slug . '%')->count();
+        $page->page_slug = $count ? $slug . '-' . $count : $slug;
         $page->status = 'active';
         $page->save();
 
-        flash()->success('page updated successfully');
-        return redirect()->route('dynamicpages.index');
+        return redirect()->route('admin.dynamicpages.index')
+            ->with('success', 'Page update successfully.');
     }
 
     public function destroy(string $id)
@@ -132,12 +177,9 @@ class DynamicPagesController extends Controller
         try {
             $page = DynamicPage::findOrFail($id);
             $page->delete();
-            flash()->success('page deleted successfully');
             return response()->json([
-
                 'success' => true,
-                "message" => "Page deleted successfully."
-
+                'message' => 'Page deleted successfully.'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -169,9 +211,8 @@ class DynamicPagesController extends Controller
             $data->save();
 
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => 'Unpublished Successfully.',
-                'data' => $data,
             ]);
         } else {
             $data->status = 'active';
@@ -179,15 +220,11 @@ class DynamicPagesController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Published Successfully.',
-                'data' => $data,
+                'message' => $data->status === 'active'
+                    ? 'Published Successfully.'
+                    : 'Unpublished Successfully.'
             ]);
         }
-        $page->save();
-        return response()->json([
-            'success' => true,
-            'message' => 'Item status changed successfully.'
-        ]);
     }
 
 
@@ -197,10 +234,9 @@ class DynamicPagesController extends Controller
         $this->authorizeAdmin('You do not have permission to bulk delete dynamic pages');
 
         if ($request->ajax()) {
-            $result = DynamicPage::whereIn('id', $request->ids)->get();
+            $result = DynamicPage::whereIn('id', $request->ids)->delete();
 
             if ($result) {
-                DynamicPage::destroy($request->ids);
                 return response()->json([
                     'success' => true,
                     'message' => 'Pages deleted successfully',
